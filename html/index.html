@@ -1,0 +1,109 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Domus Control</title>
+    <link href="./css/style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="/webiopi.js"></script>
+    <script type="text/javascript"> 
+        webiopi().ready(function() {
+
+            var cname = getCookie('name');
+            var csurname = getCookie('surname');
+            
+            if(cname && csurname) { 
+                document.getElementById('user').innerHTML = '<p>Ciao '+ cname + ' ' + csurname + '</p>';
+                menu();
+            }
+            else {
+                var form = '<div class="form"><form id="form_login" action="" >'
+                    + 'Username: <input name="username" type="text" id="username" style="width: 200px"/><br/> '
+                    + 'Password: <input name="password" type="password" id="password" style="width: 200px"/><br/>'
+                    + '<input type="button" id="submit" value="Entra" onclick="setLogin()" /><div id="messaggio">'
+                    + '</form></div>';
+                document.getElementById('pages').innerHTML = form;
+            }
+
+            webiopi().refreshGPIO(false);
+        });
+        
+        var menu = function() {
+                l = '<div><a href="/domocontrol.html">Domocontrol</a></div>';
+                document.getElementById('pages').innerHTML = l; 
+        }
+      
+        //~ Get form login and check validity
+        var setLogin = function() {
+            var username = document.getElementById('username').value;
+            var password = document.getElementById('password').value;
+            if(username && password) {
+                //~ alert('ok');
+                webiopi().callMacro("setLogin", [username,password], setLoginName);
+            }
+            else {
+                //~ alert('NO');
+                document.getElementById('messaggio').innerHTML = 'Inserisci Username e Password corretti';
+            }
+        }
+
+        var setLoginName = function (macro, args, response) {
+            login = eval(response)[0];
+            if (login['name'] && login['username'] && login['surname']) {
+                setCookie('name',login['name'] , 1);
+                setCookie('surname',login['surname'] , 1);
+                setCookie('username',login['username'] , 1);
+                setCookie('username_id',login['id'] , 1);
+                setTimeout('window.location.reload(false)', 800);
+            }
+            else {
+                //~ alert('NO');                
+                document.getElementById('messaggio').innerHTML = 'Username e/o Password NON corretti, riprova....';
+            }
+        }
+
+ 
+        function setCookie(name,value,days) {
+            if (days) {
+                var date = new Date();
+                date.setTime(date.getTime()+(days*24*60*60*1000));
+                var expires = "; expires="+date.toGMTString();
+            }
+            else var expires = "";
+            document.cookie = name+"="+value+expires+"; path=/";
+        }
+
+        function getCookie(name) {
+            var nameEQ = name + "=";
+            var ca = document.cookie.split(';');
+            for(var i=0;i < ca.length;i++) {
+                var c = ca[i];
+                while (c.charAt(0)==' ') c = c.substring(1,c.length);
+                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+            }
+            return null;
+        }
+
+        function deleteCookie(name) {
+            setCookie(name,"",-1);
+        }
+ 
+        
+    </script>
+</head>
+<body>
+
+
+<div id="container">
+    <div class="title">DomoControl Main</div>
+    <div id="user"></div>
+    <div id="pages"></div>
+    <div id="menu"></div>
+    
+
+</div>
+
+
+
+
+</body>
+</html>

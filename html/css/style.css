@@ -1,0 +1,81 @@
+body, html {
+    background:#6DFF9D;
+    height: 100%;
+    font-family: Arial;
+}
+
+#container{ 
+    width: 500px;
+    height: 100%!important;
+    height: 100%;
+    background: #25FF00;
+    margin: 0 auto;
+    
+}
+.form{
+    border: 1px solid gray;
+    padding: 10px;
+    margin: 10px;
+    text-align:center;
+}
+.title{
+    text-align:center;
+    font-weight:bold;
+}
+
+.id {
+    float:left;
+    display: block; 
+    width: auto;
+    
+    font-weight: bold;
+    margin: 5px;
+    
+    
+}
+.button {
+    float:left;
+    display: block; 
+    color: white;
+    margin: 5px;
+}
+.button button {
+    width:200px;
+    clear:both;
+    
+}
+.type_name {
+    float:left;
+    display: block; 
+    width: auto;
+    margin: 5px;
+}
+.counter {
+    float:left;
+    display: block; 
+    width: auto;
+    margin: 5px;
+}
+
+.setupGPIO  {
+    float: right;
+    width: auto;
+    margin: 5px;
+}
+.setupGPIO input {width:25px; padding: 0 5px 0 10px;}    
+    
+.button.LOW {
+    background-color: green;
+}
+.button.HIGH {
+    background-color: red;
+}
+.setup {
+    background:white;
+
+    width:500px;
+    text-align:center;
+}
+.edit{width:100%;}
+.edit tr td:nth-child(1){text-align:right;}
+.edit tr td:nth-child(2) {text-align:left;}

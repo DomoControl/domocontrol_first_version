@@ -1,0 +1,296 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Domus Control</title>
+    <link href="./css/style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="/webiopi.js"></script>
+    <script type="text/javascript"> 
+    
+    function getDate(){
+        var date = new Date();   
+        return date;
+    }
+    
+    webiopi().ready(function() {       
+        var cname = getCookie('name');
+        var csurname = getCookie('surname');
+            
+        if(!cname || !csurname) { 
+            
+        }
+        
+        document.getElementById('user').innerHTML = '<p>Ciao '+ cname + ' ' + csurname + '</p>';
+        document.getElementById('date').innerHTML = 'Date';
+
+        
+        var getStatusReturn = function (macro, args, response) {
+            var port = eval(response);
+            
+            for(var p in port) {
+                
+                //~ alert(JSON.stringify(p)); 
+                
+                var id = port[p]['gpio'];
+                //~ $( "div" ).wrap( "<div></div>" );
+                $('<div align="center" class="id" id="'+ id 
+					+ '" + title=" GPIO Name: '+ urld(port[p]['gname']) + '\n PIN numero: ' + urld(port[p]['pin']) + '\n Funzioni GPIO : ' + urld(port[p]['type']) 
+                    + '\n Default State : ' + urld(port[p]['default_state'])
+					+ '"><img src="../images/info.png" width="30px"></div>').insertAfter('#start'); 
+                $('<div align="center" class="button" id="' + id + 'gpio"></div>').insertAfter('#'+id);
+                $('<div align="center" class="type_name" id="' + id + 'type_name"></div>').insertAfter('#'+id+'gpio');
+                $('<div align="center" class="counter" id="' + id + 'counter"></div>').insertAfter('#'+id+'type_name');
+                $('<div align="center" class="setupGPIO" id="' + id + 'setup"></div>').insertAfter('#'+id+'counter');
+                $('<div align="center" class="deleteGPIO" id="' + id + 'setup"></div>').insertAfter('#'+id+'setupGPIO');
+                
+                $('<div style="clear:both;" id="' + id + 'separator">').insertAfter('#'+id+'setup'); //separator
+                
+                
+                jQuery('#'+id).append('');
+                var button = webiopi().createGPIOButton(urld(port[p]['gpio']), urld(port[p]['name']));
+                jQuery('#'+id+'gpio').append(button);
+                jQuery('#'+id+'type_name').append(urld(port[p]['type_name']));
+                if(port[p]['type_id'] == 2) {jQuery('#'+port[p]['gpio']+'counter').append(urld(port[p]['timer']));}
+                else if(port[p]['type_id'] == 3) {
+                    jQuery('#'+port[p]['gpio']+'counter').append(urld(port[p]['crono']));
+                }
+                
+                
+                
+                //~ Tasto per modificare le impostazioni del pulsante
+                jQuery('#'+id+'setup').append('<input title="Modifica configurazione" type="image" src="../images/edit.png" name="'+urld(port[p]['gpio'])+'" value="Conf." onClick="setupGPIO(\'' + urld(port[p]['gpio']) + '\')" >');
+                jQuery('#'+id+'setup').append('<input id="deleteGPIO" title="Cancella tasto" type="image" src="../images/delete.png" name="'+urld(port[p]['gpio'])+'" value="Delete" onClick="deleteGPIO(\'' + urld(port[p]['gpio']) + '\')" >');
+                
+            }
+            //~ Tasto per aggiungere nuovi pulsanti
+            jQuery('#setup').append('<div class="add_button"><input type="button" name="submit" value="add_button" onClick="addBt();"></div>');       
+        }
+        webiopi().callMacro("getStatus", [], getStatusReturn);
+        
+        // Refresh GPIO buttons
+        // pass true to refresh repeatedly of false to refresh once
+        webiopi().refreshGPIO(true);
+        
+    });
+
+    function getCookie(name) {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(';');
+        for(var i=0;i < ca.length;i++) {
+            var c = ca[i];
+            while (c.charAt(0)==' ') c = c.substring(1,c.length);
+            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+        }
+        return null;
+    }
+
+    function reload() { //Ricarica la pagina
+        setTimeout('window.location.reload(false)', 1000);
+        
+    }
+    
+    function urld(x) {return decodeURIComponent(x);} //url decode 
+
+
+    //per inserire i vari tipi di campi
+    var input = function(tipo, name, value, id, args) {
+        args = args || {}
+        id = id || 'elem';
+        name = urld(name);
+        value = urld(value);
+        switch (tipo) {
+            case 'button':
+                return '<input id="'+id+'" type="button" name="'+name+'" value="'+value+'" onclick="msg()">'; 
+            break;
+            case 'submit':
+                return '<input id="'+id+'" type="submit" name="'+name+'" value="'+value+'" onclick="msg()">'; 
+            break;
+            case 'text':
+                var size ='';
+                if (args['size']){size = 'size="'+args['size']+'"';}
+                return '<input id="'+id+'" type="text" name="'+name+'" value="'+value+'" '+ size +'>'; 
+            break;
+            case 'date':
+                return '<input id="'+id+'" type="date" name="'+name+'" value="'+value+'">'; 
+            break;
+            case 'email':
+                return '<input id="'+id+'" type="email" name="'+name+'" value="'+value+'">'; 
+            break;
+            case 'hidden':
+                return '<input id="'+id+'" type="hidden" name="'+name+'" value="'+value+'">'; 
+            break;
+            case 'number':
+                if(args['min'] > 0 || args['max'] >0) {var vmin=args['min']; var vmax=args['max'];}else{var vmin=0; var vmax=999999999999;}
+                return '<input id="'+id+'" type="number" name="'+name+'" value="'+value+'" min="'+vmin+'" max="'+vmax+'">'; 
+            break;
+            case 'password':
+                return '<input id="'+id+'" type="password" name="'+name+'" value="'+value+'">'; 
+            break;
+            case 'radio':
+                var sel = '';
+                for (r in args) {
+                    if(r == value) {var check='checked="checked"';} else{ var check='';}
+                    sel += '<input id="'+id+'" type="radio" name="'+name+'" value="'+r+'" '+ check + '/>' +args[r]  ;
+                }
+                return sel;
+            break;
+            case 'select':
+                var sel = '<select id="'+id+'" name="'+name+'">';
+                for (var r in args) {
+                    //~ alert(r + ' ' + args[r]);
+                    if(r == value) {var selected = 'selected';} else {var selected = '';}
+                    sel += '<option value="' +r+ '" ' + selected + ' >' + args[r] + '</option>';
+                }
+                sel += '</select>';
+                return sel; 
+            break;
+        }
+    }
+    
+     function setupGPIO (gpio) { // richiede i dati per il settaggio del PORT specificato
+        webiopi().callMacro("getSetupPort", [gpio], setSetupPort);        
+    }
+    
+    //~ Funzione che genera i campi per impostare il tasto corrente
+    function setSetupPort (macro, args, response) {
+        var r = $.parseJSON(response); 
+        //~ alert(JSON.stringify(r));   
+        var el = '<form  name ="subscribe" method="post" id="frm" ><table class="edit">';
+        //~ alert(JSON.stringify(port[0]['name']));   
+        el += '<tr><td> ID </td><td>'+ r[0]['id'] + input( 'hidden', 'id' , r[0]['id'] ) +'</td></tr>';
+        //~ el += '<tr><td> Abilitato </td><td>'+ input( 'select', 'active', r[0]['active'], id='elem', args={0:'No',1:'Si'}) +'</td></tr>';
+        el += '<tr><td> Set PIN </td><td>'+ input( 'select', 'in_out', r[0]['in_out'], id='elem', args={0:'OUT',1:'IN'}) +'</td></tr>';
+        el += '<tr><td> Nome </td><td>'+ input( 'text', 'name', r[0]['name']) +'</td></tr>';
+        el += '<tr><td>Tipo uscita</td><td>'+ input( 'select', 'type_id', r[0]['type_id'], id='elem', args={1:'ON-OFF',2:'Timer',3:'Chrono',4:'Telecomando'}) +'</td></tr>';
+        el += '<tr><td> Stato default</td><td>'+ input( 'select', 'default_state', r[0]['default_state'], id='elem', args={0:'Zero',1:'Uno'}) +'</td></tr>';
+        el += '<tr><td> Numero GPIO </td><td>'+ urld(r[0]['gpio_id']) +'</td></tr>';
+        el += '<tr><td> Valore Timer </td><td>'+ input( 'number', 'timer', r[0]['timer']) +'</td></tr>';
+        el += '<tr><td> Valore Crono </td><td>'+ input( 'text', 'crono', r[0]['crono'],id='crono', args={size:40}) +'</td></tr>';
+                
+        el += '<tr><td></td><td><INPUT type="button" name="submit" value="Save"  onclick="saveForm()"></td></tr>'
+        el +="</table></form>";
+        document.getElementById('setup').innerHTML = el;
+    }
+    
+    var saveForm = function() { //recupera i valori di setup del form, li manda alla funzione python per essere modificati nel database
+        //~ alert('Modifica button');
+        var st = '';
+        var i = 0;
+        $.each($('input, select ,textarea', '#frm'),function(k){
+            //~ alert(JSON.stringify($(this).val()));
+            if($(this).attr('name') != 'submit') {
+                st += $(this).attr('name') + "::" + $(this).val() + ";;";
+                i++;    
+            }
+        });
+        webiopi().callMacro("setElements", [st]);
+        reload();
+    }
+ 
+    function addBt() { //Mostra i GPIO che si possono aggiungere
+        //~ alert('addConfig');
+        webiopi().callMacro("addBt", [], addButton);
+    }
+    
+    var addButton = function(macro, args, response) {
+        var res = eval(response);
+        var el='';
+        el += '<select id="addGPIO" name="add_gpio" onchange="addGPIO()">';
+        el += '<option value="--">Select</option></option>';
+        for (var r in res) {
+        //~ alert(r + ' ' + args[r]);
+            el += '<option value="' +res[r]["gpio"]+ '"  >' + res[r][ 'name'] + '</option>';
+        }
+        el += '</select>';
+        document.getElementById('addgpio').innerHTML = el;
+    }
+    
+    function addGPIO() {
+        var gpio = document.getElementById("addGPIO").value;
+        var r={'active':1, 'in_out':0, 'name':'--', 'type_id':1, 'default_state':0, 'gpio_id':gpio, 'timer':'3' };
+        var el = '<form  name ="subscribe" method="post" id="frm" ><table class="edit">';
+        el += '<tr><td> ID </td><td>'+ gpio + input( 'hidden', 'gpio_id' , gpio ) +'</td></tr>';
+        //~ el += '<tr><td> Abilitato </td><td>'+ input( 'select', 'active', r['active'], id='elem', args={0:'No',1:'Si'}) +'</td></tr>';
+        el += '<tr><td> Set PIN </td><td>'+ input( 'select', 'in_out', r['in_out'], id='elem', args={0:'OUT',1:'IN'}) +'</td></tr>';
+        el += '<tr><td> Nome </td><td>'+ input( 'text', 'name', r['name']) +'</td></tr>';
+        el += '<tr><td>Tipo uscita</td><td>'+ input( 'select', 'type_id', r['type_id'], id='elem', args={1:'ON-OFF',2:'Timer',3:'Chrono',4:'Telecomando'}) +'</td></tr>';
+        el += '<tr><td> Stato default</td><td>'+ input( 'select', 'default_state', r['default_state'], id='elem', args={0:'Zero',1:'Uno'}) +'</td></tr>';
+        el += '<tr><td> Numero GPIO </td><td>'+ urld(r['gpio_id']) +'</td></tr>';
+        el += '<tr><td> Valore Timer </td><td>'+ input( 'number', 'timer', r['timer']) +'</td></tr>';
+                
+        el += '<tr><td></td><td><INPUT type="button" name="submit" value="Save"  onclick="addGPIOsave()"></td></tr>'
+        el +="</table></form>";
+        document.getElementById('setup').innerHTML = el;        
+    }
+    
+    function addGPIOsave() {
+        //~ alert('ADD BUTTON');
+        var st = '';
+        var i = 0;
+        $.each($('input, select ,textarea', '#frm'),function(k){
+            if($(this).attr('name') != 'submit') {
+                st += $(this).attr('name') + "::" + $(this).val() + ";;";
+                i++;    
+            }
+            
+        });
+        //~ alert('Invio elementi per querty update '+st);
+        webiopi().callMacro("addGPIO", st);
+        document.getElementById('setup').innerHTML = ''; //Azzera il form
+        reload();
+    }
+    
+    var deleteGPIO = function(gpio) {
+        //~ alert(gpio);
+        var answer = confirm ("Sei sicuro di voler cancellare il tasto " + gpio + " ?")
+        if(answer) {
+            //~ alert('Cancellato '+gpio);
+            webiopi().callMacro("deleteGPIO", gpio);
+            reload();
+        }
+    }
+    
+     
+    setInterval(
+        function getTimer() {
+            webiopi().callMacro("getTimer", [], setTimer);
+            
+            date = getDate();
+            document.getElementById('date').innerHTML = "<p>" + date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds() + "</p>";  
+    
+        }
+    , 1000);
+    
+    function setTimer(macro, args, response){
+        var res = $.parseJSON(response);
+        //~ document.getElementById('prova1').innerHTML = JSON.stringify(res);     
+        var l = Object.keys(res).length  
+        if(l > 0) {        
+            for(var r in res) {
+                document.getElementById(r+'counter').innerHTML = res[r]['count'];    
+            }
+        }
+        else {
+           document.getElementById(r+'counter').innerHTML = '';     
+        }
+    }
+    
+    
+
+    </script>
+</head>
+<body>
+    <script>
+    </script>
+        <div id="container">
+            <div id="user" style="float:left;"></div><div id="date"  style="float:right;"></div>
+            <div style="clear:both;"></div>
+            <div style="font-size:8; font-family:Arial;" align="center" id="start"></div>
+            <div align="center" class="setup" id="setup"></div>
+            <div align="center" class="addb" id="addgpio"></div>
+            <div align="center" class="prova" id="prova"></div>
+            <div align="center" class="prova1" id="prova1"></div>
+        </div>
+        
+</body>
+</html>
