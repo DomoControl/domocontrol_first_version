@@ -4,6 +4,12 @@ body, html {
     font-family: Arial;
 }
 
+.login {
+    border: 2px solid green;
+    margin: 20px;
+    padding: 10px;
+}
+
 #container{ 
     width: 500px;
     height: 100%!important;

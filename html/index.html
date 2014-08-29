@@ -6,89 +6,85 @@
     <link href="./css/style.css" rel="stylesheet" type="text/css">
     <script type="text/javascript" src="/webiopi.js"></script>
     <script type="text/javascript"> 
-        webiopi().ready(function() {
+        
+        //Funzione che trasforma i cookie in array
+        function getCookies() {
+            var cookies = { }; 
+            if (document.cookie && document.cookie != '') {
+                var split = document.cookie.split(';');
+                for (var i = 0; i < split.length; i++) {
+                    var name_value = split[i].split("=");
+                    name_value[0] = name_value[0].replace(/^ /, '');
+                    cookies[decodeURIComponent(name_value[0])] = decodeURIComponent(name_value[1]);
+                }
+            }	 
+            return cookies;   
+        }       
+        
+        
+        //Ciclo principale
+        webiopi().ready(
+            function() {
+                var aa = {'aa':'bb'};
+                //document.cookie="username=John";
+                //document.cookie="piLogin=True";
 
-            var cname = getCookie('name');
-            var csurname = getCookie('surname');
+                //per eliminare un cookie
+                //document.cookie = "username=; expires=Thu, 01 Jan 1970 00:00:00 UTC"; 
+                //alert(document.cookie);
+                //alert(getCookies()['username'] + getCookies()["piLogin"]);    
+                
+                if (getCookies() && getCookies()["username"] && getCookies()["piLogin"]) {
+                    $("#form").append("Benvenuto " + getCookies()["username"] ) ;
+                    
+                    $("#form").append('<p><a href="/status.html">IO Status</a></p>');
+                    $("#form").append('<p><a href="/setup.html">Setup</a></p>');
+                }
+                else {
+                    var l = '<form style="border: 1px solid green; padding: 10px; margin: 10px;" id="login">' + 
+                             '<center>Username: <input id="username" type=text name="username" value="" required autofocus placeholder="Username" > </center>' +
+                                '<center>Password: <input id="password" type=password name="password" value="" required placeholder="Password"></center>' +
+                                '<center><input id="entra" type="button" name="entra" value="Entra" onclick=Login("Login()");></center>' +
+                            '</form>';
+                    $("#form").append(l);
+                }
+                
+                
+                $("#footer").append(Footer());
+                
+                webiopi().refreshGPIO(false);
+            });
+            // Fine main ciclo
             
-            if(cname && csurname) { 
-                document.getElementById('user').innerHTML = '<p>Ciao '+ cname + ' ' + csurname + '</p>';
-                menu();
+            //verifica se le credenziali sono corrette
+            function Login() {
+                var username = $("#username").val();
+                var password = $("#password").val();
+                if($("#entra").val()=="Entra" && username && password) {
+                    //alert("bisogna inviare le credenziali traite una macro a python per la verifica");
+                    if(username == "luca" && password == "12311") {
+                        document.cookie="username=luca";
+                        document.cookie="piLogin=True";
+                        location.reload();
+                    }
+                    
+                    
+                }
             }
-            else {
-                var form = '<div class="form"><form id="form_login" action="" >'
-                    + 'Username: <input name="username" type="text" id="username" style="width: 200px"/><br/> '
-                    + 'Password: <input name="password" type="password" id="password" style="width: 200px"/><br/>'
-                    + '<input type="button" id="submit" value="Entra" onclick="setLogin()" /><div id="messaggio">'
-                    + '</form></div>';
-                document.getElementById('pages').innerHTML = form;
+            
+            function LogOut() {
+                document.cookie = "username=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+                document.cookie = "piLogin=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+                location.reload();
+            }
+            
+            //Contenuto del footer
+            function Footer() {
+                var footer = ' <input type="button" name="footer" value="LogOut" onclick=LogOut("LogOut()") >' ;
+                return footer;
             }
 
-            webiopi().refreshGPIO(false);
-        });
-        
-        var menu = function() {
-                l = '<div><a href="/domocontrol.html">Domocontrol</a></div>';
-                document.getElementById('pages').innerHTML = l; 
-        }
-      
-        //~ Get form login and check validity
-        var setLogin = function() {
-            var username = document.getElementById('username').value;
-            var password = document.getElementById('password').value;
-            if(username && password) {
-                //~ alert('ok');
-                webiopi().callMacro("setLogin", [username,password], setLoginName);
-            }
-            else {
-                //~ alert('NO');
-                document.getElementById('messaggio').innerHTML = 'Inserisci Username e Password corretti';
-            }
-        }
-
-        var setLoginName = function (macro, args, response) {
-            login = eval(response)[0];
-            if (login['name'] && login['username'] && login['surname']) {
-                setCookie('name',login['name'] , 1);
-                setCookie('surname',login['surname'] , 1);
-                setCookie('username',login['username'] , 1);
-                setCookie('username_id',login['id'] , 1);
-                setTimeout('window.location.reload(false)', 800);
-            }
-            else {
-                //~ alert('NO');                
-                document.getElementById('messaggio').innerHTML = 'Username e/o Password NON corretti, riprova....';
-            }
-        }
-
- 
-        function setCookie(name,value,days) {
-            if (days) {
-                var date = new Date();
-                date.setTime(date.getTime()+(days*24*60*60*1000));
-                var expires = "; expires="+date.toGMTString();
-            }
-            else var expires = "";
-            document.cookie = name+"="+value+expires+"; path=/";
-        }
-
-        function getCookie(name) {
-            var nameEQ = name + "=";
-            var ca = document.cookie.split(';');
-            for(var i=0;i < ca.length;i++) {
-                var c = ca[i];
-                while (c.charAt(0)==' ') c = c.substring(1,c.length);
-                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
-            }
-            return null;
-        }
-
-        function deleteCookie(name) {
-            setCookie(name,"",-1);
-        }
- 
-        
-    </script>
+    </script> 
 </head>
 <body>
 
@@ -96,8 +92,16 @@
 <div id="container">
     <div class="title">DomoControl Main</div>
     <div id="user"></div>
+    
+    <div id="login">
+
+    </div>
+    
     <div id="pages"></div>
+    <div id="form"></div>
     <div id="menu"></div>
+    <div id="message"></div>
+    <div id="footer"></div>
     
 
 </div>
