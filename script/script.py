@@ -272,14 +272,14 @@ def deleteGPIO(gpio):
 
 @webiopi.macro             
 def setLogin(*args):
-    #~ debug("%s  %s" %(args[0],args[1]))
+    debug("%s  %s" %(args[0],args[1]))
     q="SELECT id,username,name,surname FROM pi_user WHERE username='%s' AND password='%s'" %(args[0],args[1])
     c = query(q)
-    #~ debug(q)
+    debug(q)
     if len(c) > 0:
         return json.dumps(c)    
     else:
-        return json.dumps([{'Login':'NO'}])    
+        return "Login_NO"
     
 
 

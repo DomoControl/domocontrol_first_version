@@ -9,15 +9,23 @@ body, html {
     margin: 20px;
     padding: 10px;
 }
-
-#container{ 
+ 
+#container { 
     width: 500px;
     height: 100%!important;
     height: 100%;
     background: #25FF00;
     margin: 0 auto;
+}
+#footer {
+    position:fixed; 
+    bottom:5px; 
+    background:yellow; 
+    z-index:999999; 
+    width: 500px;
     
 }
+
 .form{
     border: 1px solid gray;
     padding: 10px;

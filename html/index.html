@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE html>
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -6,83 +6,132 @@
     <link href="./css/style.css" rel="stylesheet" type="text/css">
     <script type="text/javascript" src="/webiopi.js"></script>
     <script type="text/javascript"> 
-        
-        //Funzione che trasforma i cookie in array
-        function getCookies() {
-            var cookies = { }; 
-            if (document.cookie && document.cookie != '') {
-                var split = document.cookie.split(';');
-                for (var i = 0; i < split.length; i++) {
-                    var name_value = split[i].split("=");
-                    name_value[0] = name_value[0].replace(/^ /, '');
-                    cookies[decodeURIComponent(name_value[0])] = decodeURIComponent(name_value[1]);
-                }
-            }	 
-            return cookies;   
-        }       
-        
-        
+
         //Ciclo principale
         webiopi().ready(
             function() {
-                var aa = {'aa':'bb'};
-                //document.cookie="username=John";
-                //document.cookie="piLogin=True";
-
-                //per eliminare un cookie
-                //document.cookie = "username=; expires=Thu, 01 Jan 1970 00:00:00 UTC"; 
-                //alert(document.cookie);
-                //alert(getCookies()['username'] + getCookies()["piLogin"]);    
                 
-                if (getCookies() && getCookies()["username"] && getCookies()["piLogin"]) {
-                    $("#form").append("Benvenuto " + getCookies()["username"] ) ;
+                getTitle(getCookies()["page"]); //imposta il titolo della pagina
+                //Verifica se l'utente è autenticato
+                if (getCookies() && getCookies()["username"] != "undefined" && getCookies()["piLogin"] && getCookies()["piLogin"] == "Yes") {
+                    if( getCookies()["page"] == "Menu" ) {
+                        $("#form").append('<p><input type="button" name="status" value="Status" onclick="document.cookie=\'page=menuStatus\';location.reload()" ></p>');
+                        $("#form").append('<p><input type="button" name="setup" value="Setup" onclick="document.cookie=\'page=menuSetup\';location.reload()" ></p>');
+                    }
+                    else if( getCookies()["page"] == "menuSetup" ) {
+                        $("#form").append('<p><input type="button" name="status" value="Status" onclick="document.cookie=\'page=menuStatus\';location.reload()" ></p>');
+                    }
+                    else if( getCookies()["page"] == "menuStatus" ) {
+                        alert("menu setup");
+                    }                    
                     
-                    $("#form").append('<p><a href="/status.html">IO Status</a></p>');
-                    $("#form").append('<p><a href="/setup.html">Setup</a></p>');
                 }
-                else {
+                //Login Page
+                else if (! getCookies()["piLogin"] || getCookies()["piLogin"] == 'undefined') {
+                    document.cookie = "page=Login";
                     var l = '<form style="border: 1px solid green; padding: 10px; margin: 10px;" id="login">' + 
                              '<center>Username: <input id="username" type=text name="username" value="" required autofocus placeholder="Username" > </center>' +
                                 '<center>Password: <input id="password" type=password name="password" value="" required placeholder="Password"></center>' +
-                                '<center><input id="entra" type="button" name="entra" value="Entra" onclick=Login("Login()");></center>' +
+                                '<center><input id="entra" type="button" name="entra" value="Entra" onclick=Login();></center>' +
                             '</form>';
                     $("#form").append(l);
                 }
                 
                 
-                $("#footer").append(Footer());
-                
-                webiopi().refreshGPIO(false);
+                getFooter(getCookies()["page"]); //mostra il footer
+                webiopi().refreshGPIO();
             });
             // Fine main ciclo
             
-            //verifica se le credenziali sono corrette
-            function Login() {
-                var username = $("#username").val();
-                var password = $("#password").val();
-                if($("#entra").val()=="Entra" && username && password) {
-                    //alert("bisogna inviare le credenziali traite una macro a python per la verifica");
-                    if(username == "luca" && password == "12311") {
-                        document.cookie="username=luca";
-                        document.cookie="piLogin=True";
-                        location.reload();
+            //Funzione che trasforma i cookie in array
+            function getCookies() {
+                var cookies = { }; 
+                if (document.cookie && document.cookie != '') {
+                    var split = document.cookie.split(';');
+                    for (var i = 0; i < split.length; i++) {
+                        var name_value = split[i].split("=");
+                        name_value[0] = name_value[0].replace(/^ /, '');
+                        cookies[decodeURIComponent(name_value[0])] = decodeURIComponent(name_value[1]);
                     }
-                    
-                    
+                }	  
+                return cookies;   
+            }                
+            
+            //Mostra il titolo della pagina
+            function getTitle(page) {
+                var title;
+                switch(page) {
+                    case 'Login':
+                        break;
+                    case 'Menu':                        
+                        break;
+                    case 'menuSetup':
+                        page = 'Menu Setup';
+                        break;
+                    case 'menuStatus':
+                        page = 'Status';
+                        break;
                 }
+                $("#title").append('<h1>DomoControl - ' + page + '</h1>');
             }
             
+            //Mostra il footer
+            function getFooter(page) {    
+                var footer;
+                switch(page) {
+                    case 'Login':
+                        footer = '<span>Inserisci username e password</span>';
+                        break;
+                    case 'Menu':
+                        footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
+                        footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';        
+                        break;
+                    case 'menuSetup':
+                        footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
+                        footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';        
+                        break;
+                    case 'menuStatus':
+                        footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
+                        footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';        
+                        break;                        
+                }
+                $("#footer").append(footer);
+            }            
+            
+            //verifica se le credenziali sono corrette
+            function Login() {
+                if($("#username").val() && $("#password").val()) {
+                    webiopi().callMacro("setLogin", [$("#username").val(),$("#password").val()], setLogin);
+                }
+                else {
+                    alert("Inserisci i campi Username e Password");
+                }
+            } 
+            
+            var setLogin = function (macro, args, response) {
+                if(response == "Login_NO") {
+                    alert("Username e Password non validi");    
+                } else {
+                    var res = $.parseJSON(response)[0];
+                    document.cookie = "username = " +res ['username'];
+                    document.cookie = "name = " +res['name'];
+                    document.cookie = "surname = " +res['surname'];
+                    document.cookie = "piLogin = Yes";
+                    document.cookie = "page = Menu";
+                    location.reload();
+                }
+                
+            }
+            
+            //rimuove i cookie e logout
             function LogOut() {
                 document.cookie = "username=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
                 document.cookie = "piLogin=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
-                location.reload();
+                document.cookie = "page = Login";
+                //location.reload();
             }
             
-            //Contenuto del footer
-            function Footer() {
-                var footer = ' <input type="button" name="footer" value="LogOut" onclick=LogOut("LogOut()") >' ;
-                return footer;
-            }
+
 
     </script> 
 </head>
@@ -90,12 +139,10 @@
 
 
 <div id="container">
-    <div class="title">DomoControl Main</div>
+    <div id="title" class="title"></div>
     <div id="user"></div>
     
-    <div id="login">
-
-    </div>
+    <div id="login"></div>
     
     <div id="pages"></div>
     <div id="form"></div>

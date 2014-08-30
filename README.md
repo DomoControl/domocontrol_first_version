@@ -19,7 +19,7 @@ Domocontrol si basa su 3 direcory principali:
 
 Se siete interessati a contribuire con codice, informazioni, traduzioni, segnalazioni, consigli e altro, siete i benvenuti.
 
-Il progetto lo potete trovare su github all'indirizzo: https://github.com/lucasub/domocontrol
+Il progetto lo potete trovare su github all'indirizzo: https://github.com/DomoControl/domocontrol
 
 Scrivete a subluca@gmail.com
 Grazie del vostro contributo.
