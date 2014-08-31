@@ -2,6 +2,7 @@ body, html {
     background:#6DFF9D;
     height: 100%;
     font-family: Arial;
+    margin: 10px 0px 0px 0px;
 }
 
 .login {
@@ -12,19 +13,25 @@ body, html {
  
 #container { 
     width: 500px;
-    height: 100%!important;
-    height: 100%;
+    height: auto;
     background: #25FF00;
     margin: 0 auto;
 }
+#username, #password, #entra {height:30px; margin: 10px;}
+
+.but {width:100%; text-align:center;}
+.but input {width:300px; height: 2em; font-size: 1.5em;}
+
+
 #footer {
-    position:fixed; 
-    bottom:5px; 
-    background:yellow; 
-    z-index:999999; 
-    width: 500px;
-    
+    width: auto;
+    border: 2px solid black;
+    background: yellow;
+    text-align:center;
 }
+#footer input {font-size:30px;}
+    
+
 
 .form{
     border: 1px solid gray;
@@ -47,17 +54,7 @@ body, html {
     
     
 }
-.button {
-    float:left;
-    display: block; 
-    color: white;
-    margin: 5px;
-}
-.button button {
-    width:200px;
-    clear:both;
-    
-}
+
 .type_name {
     float:left;
     display: block; 

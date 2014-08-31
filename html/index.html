@@ -5,40 +5,17 @@
     <title>Domus Control</title>
     <link href="./css/style.css" rel="stylesheet" type="text/css">
     <script type="text/javascript" src="/webiopi.js"></script>
+
     <script type="text/javascript"> 
 
         //Ciclo principale
         webiopi().ready(
             function() {
                 
-                getTitle(getCookies()["page"]); //imposta il titolo della pagina
-                //Verifica se l'utente è autenticato
-                if (getCookies() && getCookies()["username"] != "undefined" && getCookies()["piLogin"] && getCookies()["piLogin"] == "Yes") {
-                    if( getCookies()["page"] == "Menu" ) {
-                        $("#form").append('<p><input type="button" name="status" value="Status" onclick="document.cookie=\'page=menuStatus\';location.reload()" ></p>');
-                        $("#form").append('<p><input type="button" name="setup" value="Setup" onclick="document.cookie=\'page=menuSetup\';location.reload()" ></p>');
-                    }
-                    else if( getCookies()["page"] == "menuSetup" ) {
-                        $("#form").append('<p><input type="button" name="status" value="Status" onclick="document.cookie=\'page=menuStatus\';location.reload()" ></p>');
-                    }
-                    else if( getCookies()["page"] == "menuStatus" ) {
-                        alert("menu setup");
-                    }                    
-                    
-                }
-                //Login Page
-                else if (! getCookies()["piLogin"] || getCookies()["piLogin"] == 'undefined') {
-                    document.cookie = "page=Login";
-                    var l = '<form style="border: 1px solid green; padding: 10px; margin: 10px;" id="login">' + 
-                             '<center>Username: <input id="username" type=text name="username" value="" required autofocus placeholder="Username" > </center>' +
-                                '<center>Password: <input id="password" type=password name="password" value="" required placeholder="Password"></center>' +
-                                '<center><input id="entra" type="button" name="entra" value="Entra" onclick=Login();></center>' +
-                            '</form>';
-                    $("#form").append(l);
-                }
                 
                 
-                getFooter(getCookies()["page"]); //mostra il footer
+                getPage();
+                
                 webiopi().refreshGPIO();
             });
             // Fine main ciclo
@@ -57,46 +34,105 @@
                 return cookies;   
             }                
             
-            //Mostra il titolo della pagina
-            function getTitle(page) {
+            //Sceglie quali pagine mostrare
+            function getPage() {
                 var title;
-                switch(page) {
-                    case 'Login':
-                        break;
-                    case 'Menu':                        
-                        break;
-                    case 'menuSetup':
-                        page = 'Menu Setup';
-                        break;
-                    case 'menuStatus':
-                        page = 'Status';
-                        break;
-                }
-                $("#title").append('<h1>DomoControl - ' + page + '</h1>');
-            }
-            
-            //Mostra il footer
-            function getFooter(page) {    
                 var footer;
+                var page = getCookies()['page'];
+                if(typeof(page) == 'undefined') {page = "login";} //init if page is not set
+               
                 switch(page) {
-                    case 'Login':
+                    case 'login':
+                        page = '<small>Login</small>'
                         footer = '<span>Inserisci username e password</span>';
+                        var l = '<form style="border: 1px solid green; padding: 10px; margin: 10px;" id="login">' + 
+                             '<center><input id="username" type=text name="username" value="" required autofocus placeholder="Username" > </center>' +
+                                '<center><input id="password" type=password name="password" value="" required placeholder="Password"></center>' +
+                                '<center><input id="entra" type="button" name="entra" value="Entra" onclick=Login();></center>' +
+                            '</form>';
+                        $("#form").html(l);
                         break;
-                    case 'Menu':
+                    case 'menu':    
+                        page = '<small>Menu</small>'
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
-                        footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';        
+                        footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';   
+                        $("#form").html('<p class="but"><input type="button" name="status" value="Status" onclick="document.cookie=\'page=menuStatus\';getPage()" ></p>' +
+                                '<p class="but"><input type="button" name="setup" value="Setup" onclick="document.cookie=\'page=menuSetup\';getPage()" ></p>');                  
                         break;
                     case 'menuSetup':
+                        page = '<small>Menu Setup</small>';
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
-                        footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';        
+                        footer += '<span><input type="button" name="footer" value="Main Menu" onclick="document.cookie=\'page=menu\';getPage()" ></span>' ;
+                        footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
+                        $("#form").html( '<p class="but"><input type="button" name="setup" value="User Setup" onclick="document.cookie=\'page=userSetup\';getPage()" ></p>' +
+                            '<p class="but"><input type="button" name="setup" value="Area Setup" onclick="document.cookie=\'page=areaSetup\';getPage()" ></p>' +
+                            '<p class="but"><input type="button" name="setup" value="Group Privileges" onclick="document.cookie=\'page=groupPrivileges\';getPage()" ></p>' +
+                            '<p class="but"><input type="button" name="setup" value="Setup Devices" onclick="document.cookie=\'page=deviceSetup\';getPage()" ></p>' +
+                            '<p class="but"><input type="button" name="setup" value="Input Setup" onclick="document.cookie=\'page=inputSetup\';getPage()" ></p>' +
+                            '<p class="but"><input type="button" name="setup" value="Area Setup" onclick="document.cookie=\'page=areaSetup\';getPage()" ></p>' +
+                            '<p class="but"><input type="button" name="setup" value="Email - SMS Setup" onclick="document.cookie=\'page=email-smsSetup\';getPage()" ></p>' );
+                        break;
+                    case 'userSetup':
+                        page = '<small>User Setup</small>';
+                        footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
+                        footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage()" >';
+                        footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
+                        $("#form").html('')
+                        break;                        
+                    case 'areaSetup':
+                        page = '<small>Area Setup</small>';
+                        footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
+                        footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage()" >';
+                        footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
+                        $("#form").html('')
+                        break;                        
+                    case 'groupPrivileges':
+                        page = '<small>Group Privileges Setup</small>';
+                        footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
+                        footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage()" >';
+                        footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
+                        $("#form").html('')
+                        break;   
+                    case 'deviceSetup':
+                        page = '<small>Device Setup</small>';
+                        footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
+                        footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage()" >';
+                        footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
+                        $("#form").html('')
+                        break;                        
+                    case 'inputSetup':
+                        page = '<small>Input Setup</small>';
+                        footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
+                        footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage()" >';
+                        footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
+                        $("#form").html('')
+                        break;  
+                    case 'areaSetup':
+                        page = '<small>Area Setup</small>';
+                        footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
+                        footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage()" >';
+                        footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
+                        $("#form").html('')
+                        break;
+                    case 'email-smsSetup':
+                        page = '<small>Email - SMS Setup</small>';
+                        footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
+                        footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage()" >';
+                        footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
+                        $("#form").html('')
                         break;
                     case 'menuStatus':
+                        page = '<small>Status</small>';
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
-                        footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';        
-                        break;                        
-                }
-                $("#footer").append(footer);
-            }            
+                        footer += '<input type="button" name="setup" value="Menu" onclick="document.cookie=\'page=menu\';getPage()" >';
+                        footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
+                        $("#form").html('')
+                        break;
+                } 
+                
+                $("#title").html('<h1>DomoControl - ' + page + '</h1>');
+                $("#footer").html(footer);
+            }
             
             //verifica se le credenziali sono corrette
             function Login() {
@@ -117,8 +153,8 @@
                     document.cookie = "name = " +res['name'];
                     document.cookie = "surname = " +res['surname'];
                     document.cookie = "piLogin = Yes";
-                    document.cookie = "page = Menu";
-                    location.reload();
+                    document.cookie = "page = menu";
+                    getPage();
                 }
                 
             }
@@ -127,8 +163,8 @@
             function LogOut() {
                 document.cookie = "username=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
                 document.cookie = "piLogin=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
-                document.cookie = "page = Login";
-                //location.reload();
+                document.cookie = "page=login";
+                getPage();
             }
             
 
