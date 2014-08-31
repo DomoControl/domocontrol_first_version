@@ -39,7 +39,8 @@
                 var title;
                 var footer;
                 var page = getCookies()['page'];
-                if(typeof(page) == 'undefined') {page = "login";} //init if page is not set
+                if(typeof(page) == 'undefined' ) {page = "login";} //init if page is not set
+                //~ alert(document.cookie);
                
                 switch(page) {
                     case 'login':
@@ -53,14 +54,14 @@
                         $("#form").html(l);
                         break;
                     case 'menu':    
-                        page = '<small>Menu</small>'
+                        title = '<small>Menu</small>'
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';   
                         $("#form").html('<p class="but"><input type="button" name="status" value="Status" onclick="document.cookie=\'page=menuStatus\';getPage()" ></p>' +
                                 '<p class="but"><input type="button" name="setup" value="Setup" onclick="document.cookie=\'page=menuSetup\';getPage()" ></p>');                  
                         break;
                     case 'menuSetup':
-                        page = '<small>Menu Setup</small>';
+                        title = '<small>Menu Setup</small>';
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                         footer += '<span><input type="button" name="footer" value="Main Menu" onclick="document.cookie=\'page=menu\';getPage()" ></span>' ;
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
@@ -73,64 +74,66 @@
                             '<p class="but"><input type="button" name="setup" value="Email - SMS Setup" onclick="document.cookie=\'page=email-smsSetup\';getPage()" ></p>' );
                         break;
                     case 'userSetup':
-                        page = '<small>User Setup</small>';
+                        title = '<small>User Setup</small>';
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                         footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage()" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                         $("#form").html('')
                         break;                        
                     case 'areaSetup':
-                        page = '<small>Area Setup</small>';
+                        title = '<small>Area Setup</small>';
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                         footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage()" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                         $("#form").html('')
                         break;                        
                     case 'groupPrivileges':
-                        page = '<small>Group Privileges Setup</small>';
+                        title = '<small>Group Privileges Setup</small>';
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                         footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage()" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                         $("#form").html('')
                         break;   
                     case 'deviceSetup':
-                        page = '<small>Device Setup</small>';
+                        title = '<small>Device Setup</small>';
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                         footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage()" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                         $("#form").html('')
                         break;                        
                     case 'inputSetup':
-                        page = '<small>Input Setup</small>';
+                        title = '<small>Input Setup</small>';
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                         footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage()" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                         $("#form").html('')
                         break;  
                     case 'areaSetup':
-                        page = '<small>Area Setup</small>';
+                        title = '<small>Area Setup</small>';
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                         footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage()" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                         $("#form").html('')
                         break;
                     case 'email-smsSetup':
-                        page = '<small>Email - SMS Setup</small>';
+                        title = '<small>Email - SMS Setup</small>';
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                         footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage()" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                         $("#form").html('')
                         break;
                     case 'menuStatus':
-                        page = '<small>Status</small>';
+                        title = '<small>Status</small>';
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                         footer += '<input type="button" name="setup" value="Menu" onclick="document.cookie=\'page=menu\';getPage()" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                         $("#form").html('')
                         break;
+                    default:
+                        footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                 } 
                 
-                $("#title").html('<h1>DomoControl - ' + page + '</h1>');
+                $("#title").html('<h1>DomoControl - ' + title + '</h1>');
                 $("#footer").html(footer);
             }
             
