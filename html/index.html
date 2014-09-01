@@ -78,6 +78,10 @@
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                         footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage()" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
+                        webiopi().callMacro("setUser", getCookies()['user_id'] , setUser);
+                        
+                        
+                        
                         $("#form").html('')
                         break;                        
                     case 'areaSetup':
@@ -152,6 +156,7 @@
                     alert("Username e Password non validi");    
                 } else {
                     var res = $.parseJSON(response)[0];
+                    document.cookie = "user_id = " +res ['id'];
                     document.cookie = "username = " +res ['username'];
                     document.cookie = "name = " +res['name'];
                     document.cookie = "surname = " +res['surname'];
@@ -170,7 +175,22 @@
                 getPage();
             }
             
-
+            var setUser = function (macro, args, response) {
+                res = $.parseJSON(response)[0];
+                //~ alert(response);
+                form = '<form name="setUser">' +
+                    '<input type="hidden" name="id" value="'+ res['id'] +'" placeholder="username"  >' +
+                    '<center><p>Username: <input type="text" name="username" value="'+ res['username'] +'" placeholder="username"  ></p></center>' +
+                    '<center><p>Password: <input type="password" name="password" value="'+ res['password'] +'" placeholder="password"  ></p></center>' +
+                    '<center><p>Retype password: <input type="password" name="password-retype" value="" placeholder="retype password"  ></p></center>' +
+                    '<center><p>Name: <input type="text" name="name" value="'+ res['name'] +'" placeholder="Name"  ></p></center>' +
+                    '<center><p>Surname: <input type="text" name="surname" value="'+ res['surname'] +'" placeholder="Surname"  ></p></center>' +
+                    '<center><p>Active: <input type="checkbox" name="active" value="'+ res['active'] +'"   ></p></center>' +
+                    '</form>';
+                $("#form").html(form);
+                    
+                
+            }
 
     </script> 
 </head>
