@@ -96,6 +96,7 @@
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                         footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage()" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
+                        webiopi().callMacro("setArea", '' , setArea);
                         $("#form").html('')
                         break;                        
                     case 'groupPrivileges':
@@ -103,6 +104,7 @@
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                         footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage()" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
+                        webiopi().callMacro("setPrivileges", '' , setPrivileges);
                         $("#form").html('')
                         break;   
                     case 'deviceSetup':
@@ -193,7 +195,7 @@
                 f +=            '<input type="hidden" name="id" value="'+ res[0][0]['id'] +'" class="textbox-300" >';
                 f +=            '<p><label class="field" for="Username">Username</label><input type="text" name="username" value="'+ res[0][0]['username'] +'" class="textbox-300" ></p>';
                 f +=            '<p><label class="field" for="Password">Password</label><input id="password" type="password" name="password" value="'+ res[0][0]['password'] +'" required class="textbox-300" ></p>';
-                f +=            '<p><label class="field" for="Reinsert">Reinsert</label><input id="confirmPassword" type="password" name="confirmPassword" value="123" class="textbox-300"></p>';
+                f +=            '<p><label class="field" for="Reinsert">Reinsert</label><input id="confirmPassword" type="password" name="confirmPassword" value="" class="textbox-300"></p>';
                 f +=            '<p><label class="field" for="Name">Name</label><input type="text" name="name" value="'+ res[0][0]['name'] +'" class="textbox-300" ></p>';
                 f +=            '<p><label class="field" for="Surname">Surname</label><input type="text" name="surname" value="'+ res[0][0]['surname'] +'" class="textbox-300" ></p>';
                                 res[0][0]['active'] ? checked='checked="checked"' : checked=''; 
@@ -243,10 +245,109 @@
                 webiopi().callMacro("setUserSave", [e(r+p)] , setUserSave1);
             }
             
-            
             var setUserSave1 = function(macro, args, response){
                getPage('userSetup');
             }
+            //Fine userSetup
+            
+            //Pagine setupArea
+            var setArea = function (macro, args, response) {
+                res = eval(response);
+                var f = '<form name="setUserForm" id="setAreaForm">';
+                f +=    '<div class="fieldSet">';
+                f +=        '<fieldset>';
+                f +=            '<legend>Form Area</legend>';
+                f +=            '<table class="f-h" align=center><tr><th>ID</th><th>Name</th><th>Description</th><th></th></tr>';
+                for (r in res) {
+                    //~ $("#text").html(r + ' - ' + res[r]['name'] + '<br>'); 
+                    f += '<input type="hidden" name="id['+ res[r]['id'] +']" value="'+ res[r]['id'] +'" />';
+                    f += '<td><input type="text" name="name['+ res[r]['id'] +']" value="'+ res[r]['name'] +'"  /></td>';
+                    f += '<td><input type="text" name="description['+ res[r]['id'] +']" value="'+ res[r]['description'] +'"  /></td>';
+                    f += '<td><input type="button" id="valida" name="valida" value="Save" onclick=setAreaSave(res[r]["id"]); /> ';
+                    f += '<input type="button" id="delete" name="delete" value="Delete" onclick=delAreaSave(res[r]["id"]); /> ';
+                    
+                    f += '</td></tr>';
+                }
+                f += '<tr><td colspan=3><input type="button" id="add" name="add" value="Add" onclick=setAreaAdd(); /></td></tr> ';                
+                f +=        '</table>';
+                f +=        '</fieldset>';
+                f +=    '</div>';
+                f += '</form>'; 
+                $("#form").html(f);
+            }
+            
+            function setAreaSave(x) {
+                var r = '';
+                r += 'id='+$('#setAreaForm').find('input[name="id['+x+']"]').val();
+                r += ',name='+$('#setAreaForm').find('input[name="name['+x+']"]').val();
+                r += ',description='+$('#setAreaForm').find('input[name="description['+x+']"]').val();
+                webiopi().callMacro("setAreaSave", [r] , setAreaSave1);
+            }
+            
+            function setAreaSave1() {
+                getPage('areaSetup');
+            }
+            
+            function delAreaSave(x) {
+                webiopi().callMacro("delAreaSave", [x] );
+                getPage('areaSetup');
+            }
+            
+            function setAreaAdd(){
+                webiopi().callMacro("setAreaAdd",  '' );
+                getPage('areaSetup');
+            }
+            //Fine pagina setupArea
+
+            //Pagine setupPrivileges
+            var setPrivileges = function (macro, args, response) {
+                res = eval(response);
+                var f = '<form name="setPrivilegesForm" id="setPrivilegesForm">';
+                f +=    '<div class="fieldSet">';
+                f +=        '<fieldset>';
+                f +=            '<legend>Form Privileges</legend>';
+                f +=            '<table class="f-h" align=center><tr><th>ID</th><th>Name</th><th>Description</th><th></th></tr>';
+                for (r in res) {
+                    //~ $("#text").html(r + ' - ' + res[r]['name'] + '<br>'); 
+                    f += '<input type="hidden" name="id['+ res[r]['id'] +']" value="'+ res[r]['id'] +'" />';
+                    f += '<td><input type="text" name="name['+ res[r]['id'] +']" value="'+ res[r]['name'] +'"  /></td>';
+                    f += '<td><input type="text" name="description['+ res[r]['id'] +']" value="'+ res[r]['description'] +'"  /></td>';
+                    f += '<td><input type="button" id="valida" name="valida" value="Save" onclick=setPrivilegesSave('+res[r]["id"]+'); /> ';
+                    f += '<input type="button" id="delete" name="delete" value="Delete" onclick=delPrivilegesSave('+res[r]["id"]+'); /> ';
+                    
+                    f += '</td></tr>';
+                }
+                f += '<tr><td colspan=3><input type="button" id="add" name="add" value="Add" onclick=setPrivilegesAdd(); /></td></tr> ';                
+                f +=        '</table>';
+                f +=        '</fieldset>';
+                f +=    '</div>';
+                f += '</form>'; 
+                //~ alert(f);
+                $("#form").html(f);
+            }
+
+            function setPrivilegesSave(x) {
+                var r = '';
+                r += 'id='+$('#setPrivilegesForm').find('input[name="id['+x+']"]').val();
+                r += ',name='+$('#setPrivilegesForm').find('input[name="name['+x+']"]').val();
+                r += ',description='+$('#setPrivilegesForm').find('input[name="description['+x+']"]').val();
+                webiopi().callMacro("setPrivilegesSave", [r] , setAreaSave1);
+            }
+            
+            function setPrivilegesSave1() {
+                getPage('privilegesSetup');
+            }
+            
+            function delPrivilegesSave(x) {
+                webiopi().callMacro("delPrivilegesSave", [x] );
+                getPage('privilegesSetup');
+            }
+            
+            function setPrivilegesAdd(){
+                webiopi().callMacro("setPrivilegesAdd",  '' );
+                getPage('privilegesSetup');
+            }
+            //Fine pagina setupArea
 
             //Encode characters
             function e(str) {return encodeURI(str); }

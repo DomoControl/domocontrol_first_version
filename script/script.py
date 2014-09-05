@@ -304,7 +304,7 @@ def setUser(args):
     privileges = query(q)
     
     res = json.dumps([user,privileges]) 
-    debug(res)
+    #~ debug(res)
     return res 
 
 @webiopi.macro             
@@ -318,21 +318,84 @@ def setUserSave(*args):
             q += r[0:r.find('=')] + "='" + r[r.find('=')+1:] + "',"
     q = q[:-1]
     q += " WHERE id=%s" % ids
-    debug(q)
+    #~ debug(q)
     c = conn(q)
-    debug("query aggiornate: %s   " %c)
+    #~ debug("query aggiornate: %s   " %c)
 
 @webiopi.macro             
 def setLogt(*args):
     q = "INSERT INTO pi_log (command,ip) VALUES('"+args[0]+"', '"+args[1]+"');"
     #~ debug(q)
-    c = conn(q)
+    conn(q)
     
+@webiopi.macro             
+def setArea(*args):
+    q = "SELECT * FROM pi_area"
+    debug(q)
+    res = query(q)
+    debug(res)
+    return res 
 
+@webiopi.macro 
+def setAreaSave(*args):
+    #~ debug(args);
+    q = "UPDATE pi_area SET "
+    i=0;
+    for r in args:
+        if r[0:3] == 'id=':
+            ids=r[3:]
+        else:
+            q += r[0:r.find('=')] + "='" + r[r.find('=')+1:] + "',"
+    q = q[:-1]
+    q += " WHERE id=%s" % ids
+    #~ debug(q)
+    c = conn(q)
 
+@webiopi.macro 
+def setAreaAdd(*args):
+    q = "INSERT INTO pi_area (name,description) VALUES ('name','description');"
+    conn(q)
 
+@webiopi.macro 
+def delAreaSave(*args):
+    q = "DELETE FROM pi_area WHERE id="+args[0]
+    #~ debug(q)
+    conn(q)
 
+@webiopi.macro             
+def setPrivileges(*args):
+    q = "SELECT * FROM pi_privileges"
+    debug(q)
+    res = query(q)
+    debug(res)
+    return res 
 
+@webiopi.macro 
+def setPrivilegesSave(*args):
+    #~ debug(args);
+    q = "UPDATE pi_privileges SET "
+    i=0;
+    for r in args:
+        if r[0:3] == 'id=':
+            ids=r[3:]
+        else:
+            q += r[0:r.find('=')] + "='" + r[r.find('=')+1:] + "',"
+    q = q[:-1]
+    q += " WHERE id=%s" % ids
+    debug(q)
+    c = conn(q)
+
+@webiopi.macro 
+def setPrivilegesAdd(*args):
+    q = "INSERT INTO pi_privileges (name,description) VALUES ('name','description');"
+    debug(q)
+    conn(q)
+
+@webiopi.macro 
+def delPrivilegesSave(*args):
+    q = "DELETE FROM pi_privileges WHERE id="+args[0]
+    debug(q)
+    conn(q)
 
 
 

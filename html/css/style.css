@@ -77,7 +77,7 @@ body, html {
 .edit tr td:nth-child(1){text-align:right;}
 .edit tr td:nth-child(2) {text-align:left;}
 
-/* Form */
+/* Form vertical*/
 div.fieldSet {
     border: solid black thin;
     width:500px;
@@ -116,3 +116,16 @@ label span, .required {
     font-weight: bold;
 }
 /* END form */
+
+/* form horizontal*/
+.f-h {
+    width:100%
+}
+.f-h td {
+    text-align:center;
+}
+.f-h  input {
+    width: 150px;
+    border: 0;
+    text-align :center;
+}
