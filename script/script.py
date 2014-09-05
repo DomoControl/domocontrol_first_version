@@ -55,12 +55,21 @@ def log(x):
     file.write('\n')
     
 def conn(q):
-    c = sqlite3.connect(DATABASE)
-    c.row_factory = sqlite3.Row
-    c.execute(q)
-    c.commit()
-    #~ debug("Total number of rows updated : %s" %c.total_changes)
-
+    try:
+        c = sqlite3.connect(DATABASE)
+        c.row_factory = sqlite3.Row
+        c.execute(q)
+        c.commit()
+        return c.total_changes
+        #~ debug("Total number of rows updated : %s" %c.total_changes)
+    except Exception as e:
+        c.rollback()
+        raise e
+    finally:
+        # Close the db connection
+        c.close()
+    
+    
 
 def dict_factory(cursor, row): #trasforma il risultato di una queri in un dizionario (vedi funzione query())
     d = {}
@@ -269,6 +278,9 @@ def deleteGPIO(gpio):
     q = "DELETE FROM pi_prog WHERE gpio_id = '%s';" %gpio
     debug(q)  
     conn(q)
+    
+    
+#~*************** INIZIO NUOVO DOMOCONTROL *******************
 
 @webiopi.macro             
 def setLogin(*args):
@@ -283,10 +295,61 @@ def setLogin(*args):
     
 @webiopi.macro             
 def setUser(args):
+    if args == False:
+        return
     user_id = json.loads(args)
     q = "SELECT * FROM pi_user WHERE id = '%s'" %user_id
-    c = query(q)
-    return json.dumps(c) 
+    user = query(q)
+    q = "SELECT * FROM pi_privileges"
+    privileges = query(q)
+    
+    res = json.dumps([user,privileges]) 
+    debug(res)
+    return res 
+
+@webiopi.macro             
+def setUserSave(*args):
+    q = "UPDATE pi_user SET "
+    i=0;
+    for r in args:
+        if r[0:3] == 'id=':
+            ids=r[3:]
+        else:
+            q += r[0:r.find('=')] + "='" + r[r.find('=')+1:] + "',"
+    q = q[:-1]
+    q += " WHERE id=%s" % ids
+    debug(q)
+    c = conn(q)
+    debug("query aggiornate: %s   " %c)
+
+@webiopi.macro             
+def setLogt(*args):
+    q = "INSERT INTO pi_log (command,ip) VALUES('"+args[0]+"', '"+args[1]+"');"
+    #~ debug(q)
+    c = conn(q)
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #~ def login(username,password):
     #~ pass

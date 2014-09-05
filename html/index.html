@@ -5,13 +5,12 @@
     <title>Domus Control</title>
     <link href="./css/style.css" rel="stylesheet" type="text/css">
     <script type="text/javascript" src="/webiopi.js"></script>
-
+    <script language="Javascript" src="http://www.codehelper.io/api/ips/?js"></script> <!-- GET IP -->
     <script type="text/javascript"> 
 
         //Ciclo principale
         webiopi().ready(
             function() {
-                
                 
                 
                 getPage();
@@ -33,6 +32,10 @@
                 }	  
                 return cookies;   
             }                
+
+            function logt(page) {
+                webiopi().callMacro("setLogt", [page,codehelper_ip.IP]);
+            }
             
             //Sceglie quali pagine mostrare
             function getPage() {
@@ -41,17 +44,23 @@
                 var page = getCookies()['page'];
                 if(typeof(page) == 'undefined' ) {page = "login";} //init if page is not set
                 //~ alert(document.cookie);
-               
+                logt(page); //Send LOG
                 switch(page) {
                     case 'login':
-                        page = '<small>Login</small>'
+                        title = '<small>Login</small>'
                         footer = '<span>Inserisci username e password</span>';
-                        var l = '<form style="border: 1px solid green; padding: 10px; margin: 10px;" id="login">' + 
-                             '<center><input id="username" type=text name="username" value="" required autofocus placeholder="Username" > </center>' +
-                                '<center><input id="password" type=password name="password" value="" required placeholder="Password"></center>' +
-                                '<center><input id="entra" type="button" name="entra" value="Entra" onclick=Login();></center>' +
-                            '</form>';
-                        $("#form").html(l);
+                        var f = '<form id="login">';
+                        f +=        '<div class="fieldSet">';
+                        f +=            '<fieldset>';
+                        f +=                '<legend>Form Login</legend>';
+                        f +=                '<p><center>Login di prova: luca  -  Password: 123<br>Se sei interessato a contribuire scrivi a subluca@gmail.com</center></p>'
+                        f +=                '<p><label class="field" for="Username">Username</label><input id="username" type=text name="username" value="" required autofocus class="textbox-300"></p>';
+                        f +=                '<p><label class="field" for="Password">Password</label><input id="password" type=password name="password" value="" required class="textbox-300"></p>';
+                        f +=                '<p><label class="field" for="Entra">&nbsp;</label><input id="entra" type="button" name="entra" value="Entra" onclick=Login();  class="textbox-300"></p>';
+                        f +=            '</fieldset>';
+                        f +=        '</div>';
+                        f +=    '</form>';
+                        $("#form").html(f);
                         break;
                     case 'menu':    
                         title = '<small>Menu</small>'
@@ -78,10 +87,8 @@
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                         footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage()" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
+                        //~ alert(getCookies()['user_id'] + document.cookie);
                         webiopi().callMacro("setUser", getCookies()['user_id'] , setUser);
-                        
-                        
-                        
                         $("#form").html('')
                         break;                        
                     case 'areaSetup':
@@ -131,7 +138,7 @@
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                         footer += '<input type="button" name="setup" value="Menu" onclick="document.cookie=\'page=menu\';getPage()" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
-                        $("#form").html('')
+                        $("#form").html('<center>Pagina da completare</center><br><br>')
                         break;
                     default:
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
@@ -151,6 +158,7 @@
                 }
             } 
             
+            //Ritorna i dati dell'utente che vengono salvati
             var setLogin = function (macro, args, response) {
                 if(response == "Login_NO") {
                     alert("Username e Password non validi");    
@@ -160,7 +168,6 @@
                     document.cookie = "username = " +res ['username'];
                     document.cookie = "name = " +res['name'];
                     document.cookie = "surname = " +res['surname'];
-                    document.cookie = "piLogin = Yes";
                     document.cookie = "page = menu";
                     getPage();
                 }
@@ -175,23 +182,79 @@
                 getPage();
             }
             
+            //Pagine setupUser
             var setUser = function (macro, args, response) {
-                res = $.parseJSON(response)[0];
-                //~ alert(response);
-                form = '<form name="setUser">' +
-                    '<input type="hidden" name="id" value="'+ res['id'] +'" placeholder="username"  >' +
-                    '<center><p>Username: <input type="text" name="username" value="'+ res['username'] +'" placeholder="username"  ></p></center>' +
-                    '<center><p>Password: <input type="password" name="password" value="'+ res['password'] +'" placeholder="password"  ></p></center>' +
-                    '<center><p>Retype password: <input type="password" name="password-retype" value="" placeholder="retype password"  ></p></center>' +
-                    '<center><p>Name: <input type="text" name="name" value="'+ res['name'] +'" placeholder="Name"  ></p></center>' +
-                    '<center><p>Surname: <input type="text" name="surname" value="'+ res['surname'] +'" placeholder="Surname"  ></p></center>' +
-                    '<center><p>Active: <input type="checkbox" name="active" value="'+ res['active'] +'"   ></p></center>' +
-                    '</form>';
-                $("#form").html(form);
+                var res = eval(response);
+                f = '<form name="setUserForm" id="setUserForm" onsubmit="checkEntries()">';
+                //~ f +=    '<p class="required">* Required</p>';
+                f +=    '<div class="fieldSet">';
+                f +=        '<fieldset>';
+                f +=            '<legend>Form Utente</legend>';
+                f +=            '<input type="hidden" name="id" value="'+ res[0][0]['id'] +'" class="textbox-300" >';
+                f +=            '<p><label class="field" for="Username">Username</label><input type="text" name="username" value="'+ res[0][0]['username'] +'" class="textbox-300" ></p>';
+                f +=            '<p><label class="field" for="Password">Password</label><input id="password" type="password" name="password" value="'+ res[0][0]['password'] +'" required class="textbox-300" ></p>';
+                f +=            '<p><label class="field" for="Reinsert">Reinsert</label><input id="confirmPassword" type="password" name="confirmPassword" value="123" class="textbox-300"></p>';
+                f +=            '<p><label class="field" for="Name">Name</label><input type="text" name="name" value="'+ res[0][0]['name'] +'" class="textbox-300" ></p>';
+                f +=            '<p><label class="field" for="Surname">Surname</label><input type="text" name="surname" value="'+ res[0][0]['surname'] +'" class="textbox-300" ></p>';
+                                res[0][0]['active'] ? checked='checked="checked"' : checked=''; 
+                //Checkbox privileges
+                var c = ''; var checked
+                for(var k in res[1]) {
                     
+                    checked = '';
+                    var pp = []; pp = res[0][0]['privileges'].split(';');
+                    for (var priv in pp) {
+                        //~ $("#message").append(res[1][k]['id'] + ' - ' + pp[priv] +'<br>');
+                        if (res[1][k]['id'] == pp[priv]) {
+                            checked = 'checked="checked"';
+                        }
+                    }
+                    f += '<p><label class="field" for="'+res[1][k]['name']+'">'+res[1][k]['name']+'</label><input type="checkbox" id="privileges" name="privileges[]" value="'+res[1][k]['id']+'" '+ checked +' class="textbox-300" /></p>';
+                }
+                //end checkbox
+                f +=            '<p><label class="field" for="Valida">&nbsp;</label><input id="valida" type="button" name="valida" value="Entra" onclick=setUserSave();  class="textbox-300"></p>';
+                f +=        '</fieldset>';
+                f +=    '</div>';
+                f += '</form>';                
+                //~ alert(f);
+                $("#form").html(f);
+                $("#text").html('<center>Ultima connessione: '+res[0][0]['timestamp']+'</center>');
+            }
+            
+            function setUserSave () {
+                if ($('#setUserForm').find('input[name="password"]').val() != $('#setUserForm').find('input[name="confirmPassword"]').val()) {
+                    alert("Le password non coincidono. Riprovare");
+                    return;
+                }                
+                var r = '';
+                r += 'id=' + $('#setUserForm').find('input[name="id"]').val();
+                r += ',username='+$('#setUserForm').find('input[name="username"]').val();
+                r += ',password='+$('#setUserForm').find('input[name="password"]').val();
+                r += ',name='+$('#setUserForm').find('input[name="name"]').val();
+                r += ',surname='+$('#setUserForm').find('input[name="surname"]').val();
                 
+                var p = ',privileges=';
+                var k = 0;
+                $('#setUserForm').find('input[type="checkbox"]:checked').each ( function() {
+                    if(k > 0) {p += ';';}
+                    p += $(this).val();
+                    k++;
+                });
+                webiopi().callMacro("setUserSave", [e(r+p)] , setUserSave1);
+            }
+            
+            
+            var setUserSave1 = function(macro, args, response){
+               getPage('userSetup');
             }
 
+            //Encode characters
+            function e(str) {return encodeURI(str); }
+            
+            //Decode characters
+            function d(str) {return decodeURI(str);}
+            
+            //~ multipleValues.join( ", " )
     </script> 
 </head>
 <body>
@@ -205,7 +268,7 @@
     
     <div id="pages"></div>
     <div id="form"></div>
-    <div id="menu"></div>
+    <div id="text"></div>
     <div id="message"></div>
     <div id="footer"></div>
     

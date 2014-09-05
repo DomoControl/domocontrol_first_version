@@ -5,19 +5,13 @@ body, html {
     margin: 10px 0px 0px 0px;
 }
 
-.login {
-    border: 2px solid green;
-    margin: 20px;
-    padding: 10px;
-}
- 
 #container { 
     width: 500px;
     height: auto;
     background: #25FF00;
     margin: 0 auto;
 }
-#username, #password, #entra {height:30px; margin: 10px;}
+
 
 .but {width:100%; text-align:center;}
 .but input {width:300px; height: 2em; font-size: 1.5em;}
@@ -31,14 +25,6 @@ body, html {
 }
 #footer input {font-size:30px;}
     
-
-
-.form{
-    border: 1px solid gray;
-    padding: 10px;
-    margin: 10px;
-    text-align:center;
-}
 .title{
     text-align:center;
     font-weight:bold;
@@ -90,3 +76,43 @@ body, html {
 .edit{width:100%;}
 .edit tr td:nth-child(1){text-align:right;}
 .edit tr td:nth-child(2) {text-align:left;}
+
+/* Form */
+div.fieldSet {
+    border: solid black thin;
+    width:500px;
+    background-color: #ffffb0;
+    margin-bottom: 20px;
+}
+fieldset {
+    border: none;
+    margin: 0 0 0 0px;
+    padding: 0;
+}
+legend {
+    font-size: 20px;
+    background-color: blue;
+    color: white;
+    width: 100%;
+    padding: 0px;
+}
+label.field {
+    text-align: right;
+    width: 150px;
+    float: left;
+    font-weight: bold;
+    margin-right: 10px;
+}
+input.textbox-300 {
+    width:200px;
+    float:left;
+}
+fieldset p {
+    clear: both;
+    padding: 5px;
+}
+label span, .required {
+    color: red;
+    font-weight: bold;
+}
+/* END form */
