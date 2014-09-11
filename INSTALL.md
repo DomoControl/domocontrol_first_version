@@ -9,6 +9,14 @@
 - abilitare password di root: sudo root  - passwd root
 - modificare .bashrc dell'utente root e pi e abilitare la visione a colori e gli alias
 
+=== INDIRIZZO IP STATICO ===
+- editare il file /etc/network/interfaces
+- anziché "iface eth0 inetdhcp" cambiare in "iface eth0 inet static"
+- aggiungere le righe:
+	address 192.168.1.248 <<==Indirizzo che si desidera
+	gateway 192.168.1.1
+	netmask 255.255.255.0
+
 *** Installare Webiopi ***
 - prelevare webiopi dal sito http://sourceforge.net/projects/webiopi/files/ : wget http://sourceforge.net/projects/webiopi/files/
 - tar xvzf file_prelevato

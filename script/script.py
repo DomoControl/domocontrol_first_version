@@ -24,12 +24,15 @@ import datetime
 import sqlite3
 import json
 from webiopi.devices.digital.pcf8574 import PCF8574
+from array import *
+
 
 def NOW(): 
     return datetime.datetime.now()    
     
 def debug(x):
     webiopi.debug("***************** %s  %s \n" % (NOW(), x))
+
     
 LOG = '/home/pi/domocontrol/test.log'
 DATABASE = '/home/pi/domocontrol/db/db.sqlite'
@@ -46,10 +49,10 @@ TIMER = {} #Dizionario con il valore di tutti i timer
 so = PCF8574(32)
 si = PCF8574(33)
 pcf = {1:1, 2:2, 3:4, 4:8, 5:16, 6:32, 7:64, 8:256}   #map output port
-debug(dir(so))
+#~ debug(dir(so))
 
 
-def log(x):
+def logFile(x):
     file = open(LOG, 'a')
     file.write(str(x))
     file.write('\n')
@@ -144,7 +147,7 @@ def setup():
 
 
 def loop():
-
+    
     cursor = query(portStatus()) #Richiesta dello stato dei PIN dal DB
     
     for r in cursor:
@@ -201,7 +204,7 @@ def destroy():
 
     # GPIO.digitalWrite(LIGHT, GPIO.LOW)
 
-    log('''\n\nChiusura programma''') 
+    #~ logf('''\n\nChiusura programma''') 
 
 @webiopi.macro
 def getStatus(): #Ritorna lo stato dei pulsanti attivi
@@ -323,10 +326,10 @@ def setUserSave(*args):
     #~ debug("query aggiornate: %s   " %c)
 
 @webiopi.macro             
-def setLogt(*args):
-    q = "INSERT INTO pi_log (command,ip) VALUES('"+args[0]+"', '"+args[1]+"');"
+def setLogt(*args): #Da finire. Serve per tracciare l'IP
+    q = "INSERT INTO pi_log (command,ip) VALUES('%s', '%s')" %(args[0],args[1])
     #~ debug(q)
-    conn(q)
+    #~ conn(q)
     
 @webiopi.macro             
 def setArea(*args):
@@ -396,15 +399,88 @@ def delPrivilegesSave(*args):
     q = "DELETE FROM pi_privileges WHERE id="+args[0]
     debug(q)
     conn(q)
+#~End Privileges 
 
+#INPUT setup
+@webiopi.macro             
+def setInputSetup(*args):
+    q = "SELECT * FROM pi_io"
+    debug(q)
+    res = query(q)
+    debug(res)
+    return res 
 
+@webiopi.macro 
+def setInputSetupSave(*args):
+    #~ debug(args);
+    q = "UPDATE pi_io SET "
+    i=0;
+    for r in args:
+        if r[0:3] == 'id=':
+            ids=r[3:]
+        else:
+            q += r[0:r.find('=')] + "='" + r[r.find('=')+1:] + "',"
+    q = q[:-1]
+    q += " WHERE id=%s" % ids
+    debug(q)
+    c = conn(q)
 
+@webiopi.macro 
+def setInputSetupAdd(*args):
+    q = "INSERT INTO pi_io (name,description) VALUES ('name','description');"
+    debug(q)
+    conn(q)
 
+@webiopi.macro 
+def delInputSetupSave(*args):
+    q = "DELETE FROM pi_io WHERE id="+args[0]
+    debug(q)
+    conn(q)
+#~End IO setup
 
+#~ BoardSetup 
+@webiopi.macro             
+def setBoardSetup():
+    q = "SELECT * FROM pi_board"
+    board = query(q)    
+    res = json.dumps(board) 
+    #~ debug(res)
+    return res 
 
+@webiopi.macro             
+def setBoardSetupSave(*args):
+    q = "UPDATE pi_board SET "
+    i=0;
+    for r in args:
+        if r[0:3] == 'id=':
+            ids=r[3:]
+        else:
+            q += r[0:r.find('=')] + "='" + r[r.find('=')+1:] + "',"
+    q = q[:-1]
+    q += " WHERE id=%s" % ids
+    debug(q)
+    c = conn(q)
+    #~ debug("query aggiornate: %s   " %c)
+#~ END BoardSetup 
 
+#~ Edit IO
+@webiopi.macro             
+def setBoardIOSetup():
+    res = []
+    
+    q = "SELECT b.id bid, b.name bname, b.description bdescription, b.enable benable, i.* FROM pi_board AS b, pi_board_io AS i WHERE b.id=i.board_id;"
+    #~ debug(q)
+    res['board'] = query(q)
+    q = "SELECT * FROM pi_io;"
+    res['io'] = query(q) 
+    debug(res)
+    
+    return json.dumps(res)
 
-
+@webiopi.macro             
+def addIO():
+    q = "INSERT INTO pi_board_io (name, descriptioin) VALUES('???','???')"
+    conn(q)
 
 
 

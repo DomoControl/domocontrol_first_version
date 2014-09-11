@@ -2,18 +2,18 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="robots" content="noindex" />
     <title>Domus Control</title>
     <link href="./css/style.css" rel="stylesheet" type="text/css">
     <script type="text/javascript" src="/webiopi.js"></script>
-    <script language="Javascript" src="http://www.codehelper.io/api/ips/?js"></script> <!-- GET IP -->
+    <!-- <script language="Javascript" src="http://www.codehelper.io/api/ips/?js"></script> -->
     <script type="text/javascript"> 
 
         //Ciclo principale
         webiopi().ready(
             function() {
                 
-                
-                getPage();
+                getPage(1);
                 
                 webiopi().refreshGPIO();
             });
@@ -34,11 +34,12 @@
             }                
 
             function logt(page) {
-                webiopi().callMacro("setLogt", [page,codehelper_ip.IP]);
+                //~ webiopi().callMacro("setLogt", [page,codehelper_ip.IP]);
+                webiopi().callMacro("setLogt", [page,'----']);
             }
             
             //Sceglie quali pagine mostrare
-            function getPage() {
+            function getPage(x) {
                 var title;
                 var footer;
                 var page = getCookies()['page'];
@@ -66,26 +67,25 @@
                         title = '<small>Menu</small>'
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';   
-                        $("#form").html('<p class="but"><input type="button" name="status" value="Status" onclick="document.cookie=\'page=menuStatus\';getPage()" ></p>' +
-                                '<p class="but"><input type="button" name="setup" value="Setup" onclick="document.cookie=\'page=menuSetup\';getPage()" ></p>');                  
+                        $("#form").html('<p class="but"><input type="button" name="status" value="Status" onclick="document.cookie=\'page=menuStatus\';getPage(1)" ></p>' +
+                                '<p class="but"><input type="button" name="setup" value="Setup" onclick="document.cookie=\'page=menuSetup\';getPage(1)" ></p>');                  
                         break;
                     case 'menuSetup':
                         title = '<small>Menu Setup</small>';
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
-                        footer += '<span><input type="button" name="footer" value="Main Menu" onclick="document.cookie=\'page=menu\';getPage()" ></span>' ;
+                        footer += '<span><input type="button" name="footer" value="Main Menu" onclick="document.cookie=\'page=menu\';getPage(1)" ></span>' ;
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
-                        $("#form").html( '<p class="but"><input type="button" name="setup" value="User Setup" onclick="document.cookie=\'page=userSetup\';getPage()" ></p>' +
-                            '<p class="but"><input type="button" name="setup" value="Area Setup" onclick="document.cookie=\'page=areaSetup\';getPage()" ></p>' +
-                            '<p class="but"><input type="button" name="setup" value="Group Privileges" onclick="document.cookie=\'page=groupPrivileges\';getPage()" ></p>' +
-                            '<p class="but"><input type="button" name="setup" value="Setup Devices" onclick="document.cookie=\'page=deviceSetup\';getPage()" ></p>' +
-                            '<p class="but"><input type="button" name="setup" value="Input Setup" onclick="document.cookie=\'page=inputSetup\';getPage()" ></p>' +
-                            '<p class="but"><input type="button" name="setup" value="Area Setup" onclick="document.cookie=\'page=areaSetup\';getPage()" ></p>' +
-                            '<p class="but"><input type="button" name="setup" value="Email - SMS Setup" onclick="document.cookie=\'page=email-smsSetup\';getPage()" ></p>' );
+                        $("#form").html( '<p class="but"><input type="button" name="setup" value="User Setup" onclick="document.cookie=\'page=userSetup\';getPage(1)" ></p>' +
+                            '<p class="but"><input type="button" name="setup" value="Area Setup" onclick="document.cookie=\'page=areaSetup\';getPage(1)" ></p>' +
+                            '<p class="but"><input type="button" name="setup" value="Group Privileges" onclick="document.cookie=\'page=groupPrivileges\';getPage(1)" ></p>' +
+                            '<p class="but"><input type="button" name="setup" value="Board Setup" onclick="document.cookie=\'page=boardSetup\';getPage(1)" ></p>' +
+                            '<p class="but"><input type="button" name="setup" value="Input Setup" onclick="document.cookie=\'page=inputSetup\';getPage(1)" ></p>' +
+                            '<p class="but"><input type="button" name="setup" value="Email - SMS Setup" onclick="document.cookie=\'page=email-smsSetup\';getPage(1)" ></p>' );
                         break;
                     case 'userSetup':
                         title = '<small>User Setup</small>';
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
-                        footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage()" >';
+                        footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage(1)" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                         //~ alert(getCookies()['user_id'] + document.cookie);
                         webiopi().callMacro("setUser", getCookies()['user_id'] , setUser);
@@ -94,51 +94,62 @@
                     case 'areaSetup':
                         title = '<small>Area Setup</small>';
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
-                        footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage()" >';
+                        footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage(1)" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                         webiopi().callMacro("setArea", '' , setArea);
                         $("#form").html('')
-                        break;                        
+                        break;       
                     case 'groupPrivileges':
-                        title = '<small>Group Privileges Setup</small>';
+                        title = '<small>Group Privileges</small>';
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
-                        footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage()" >';
+                        footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage(1)" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                         webiopi().callMacro("setPrivileges", '' , setPrivileges);
                         $("#form").html('')
                         break;   
-                    case 'deviceSetup':
-                        title = '<small>Device Setup</small>';
-                        footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
-                        footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage()" >';
-                        footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
-                        $("#form").html('')
-                        break;                        
                     case 'inputSetup':
                         title = '<small>Input Setup</small>';
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
-                        footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage()" >';
+                        footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage(1)" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
+                        webiopi().callMacro("setInputSetup", '' , setInputSetup);
                         $("#form").html('')
                         break;  
+                    case 'boardSetup':
+                        title = '<small>Board Setup</small>';
+                        footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
+                        footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage(1)" >';
+                        footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
+                        webiopi().callMacro("setBoardSetup", '' , setBoardSetup);
+                        $("#form").html('')
+                        break;                        
+                    case 'boardIOSetup':
+                        title = '<small>Board IO Setup</small>';
+                        footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
+                        footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage(1)" >';
+                        footer += '<input type="button" name="setup" value="Board Setup" onclick="document.cookie=\'page=boardSetup\';getPage(1)" >';
+                        footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
+                        webiopi().callMacro("setBoardIOSetup", '', setBoardIOSetup);
+                        $("#form").html('')
+                        break;   
                     case 'areaSetup':
                         title = '<small>Area Setup</small>';
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
-                        footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage()" >';
+                        footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage(1)" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                         $("#form").html('')
                         break;
                     case 'email-smsSetup':
                         title = '<small>Email - SMS Setup</small>';
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
-                        footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage()" >';
+                        footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage(1)" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                         $("#form").html('')
                         break;
                     case 'menuStatus':
                         title = '<small>Status</small>';
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
-                        footer += '<input type="button" name="setup" value="Menu" onclick="document.cookie=\'page=menu\';getPage()" >';
+                        footer += '<input type="button" name="setup" value="Menu" onclick="document.cookie=\'page=menu\';getPage(1)" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                         $("#form").html('<center>Pagina da completare</center><br><br>')
                         break;
@@ -148,6 +159,7 @@
                 
                 $("#title").html('<h1>DomoControl - ' + title + '</h1>');
                 $("#footer").html(footer);
+                return
             }
             
             //verifica se le credenziali sono corrette
@@ -171,7 +183,7 @@
                     document.cookie = "name = " +res['name'];
                     document.cookie = "surname = " +res['surname'];
                     document.cookie = "page = menu";
-                    getPage();
+                    getPage(1);
                 }
                 
             }
@@ -181,7 +193,7 @@
                 document.cookie = "username=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
                 document.cookie = "piLogin=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
                 document.cookie = "page=login";
-                getPage();
+                getPage(1);
             }
             
             //Pagine setupUser
@@ -211,10 +223,10 @@
                             checked = 'checked="checked"';
                         }
                     }
-                    f += '<p><label class="field" for="'+res[1][k]['name']+'">'+res[1][k]['name']+'</label><input type="checkbox" id="privileges" name="privileges[]" value="'+res[1][k]['id']+'" '+ checked +' class="textbox-300" /></p>';
+                    f += '<p><label class="field" for="'+res[1][k]['name']+'">'+res[1][k]['name']+' </label><input type="checkbox" id="privileges" name="privileges[]" value="'+res[1][k]['id']+'" '+ checked +' class="textbox-300" /></p>';
                 }
                 //end checkbox
-                f +=            '<p><label class="field" for="Valida">&nbsp;</label><input id="valida" type="button" name="valida" value="Entra" onclick=setUserSave();  class="textbox-300"></p>';
+                f +=            '<p><label class="field" for="Valida">&nbsp;</label><input id="valida" type="button" name="valida" value="Save" onclick=setUserSave();  class="textbox-300"></p>';
                 f +=        '</fieldset>';
                 f +=    '</div>';
                 f += '</form>';                
@@ -246,7 +258,8 @@
             }
             
             var setUserSave1 = function(macro, args, response){
-               getPage('userSetup');
+                document.cookie = "page=userSetup";
+                getPage(1);
             }
             //Fine userSetup
             
@@ -285,17 +298,20 @@
             }
             
             function setAreaSave1() {
-                getPage('areaSetup');
+                document.cookie = "page=areaSetup";
+                getPage(1);
             }
             
             function delAreaSave(x) {
                 webiopi().callMacro("delAreaSave", [x] );
-                getPage('areaSetup');
+                document.cookie = "page=areaSetup";
+                getPage(1);
             }
             
             function setAreaAdd(){
                 webiopi().callMacro("setAreaAdd",  '' );
-                getPage('areaSetup');
+                document.cookie = "page=areaSetup";
+                getPage(1);
             }
             //Fine pagina setupArea
 
@@ -310,10 +326,10 @@
                 for (r in res) {
                     //~ $("#text").html(r + ' - ' + res[r]['name'] + '<br>'); 
                     f += '<input type="hidden" name="id['+ res[r]['id'] +']" value="'+ res[r]['id'] +'" />';
-                    f += '<td><input type="text" name="name['+ res[r]['id'] +']" value="'+ res[r]['name'] +'"  /></td>';
+                    f += '<td><input type="text" name="name['+ res[r]['id'] +']" value="'+ res[r]['name'] +'" readonly /></td>';
                     f += '<td><input type="text" name="description['+ res[r]['id'] +']" value="'+ res[r]['description'] +'"  /></td>';
                     f += '<td><input type="button" id="valida" name="valida" value="Save" onclick=setPrivilegesSave('+res[r]["id"]+'); /> ';
-                    f += '<input type="button" id="delete" name="delete" value="Delete" onclick=delPrivilegesSave('+res[r]["id"]+'); /> ';
+                    //~ f += '<input type="button" id="delete" name="delete" value="Delete" onclick=delPrivilegesSave('+res[r]["id"]+'); /> ';
                     
                     f += '</td></tr>';
                 }
@@ -327,27 +343,168 @@
             }
 
             function setPrivilegesSave(x) {
+                alert(document.cookie);
                 var r = '';
                 r += 'id='+$('#setPrivilegesForm').find('input[name="id['+x+']"]').val();
                 r += ',name='+$('#setPrivilegesForm').find('input[name="name['+x+']"]').val();
                 r += ',description='+$('#setPrivilegesForm').find('input[name="description['+x+']"]').val();
-                webiopi().callMacro("setPrivilegesSave", [r] , setAreaSave1);
+                webiopi().callMacro("setPrivilegesSave", [r] , setPrivilegesSave1);
             }
             
             function setPrivilegesSave1() {
-                getPage('privilegesSetup');
+                document.cookie = "page=privilegesSetup";
+                getPage(1);
             }
             
             function delPrivilegesSave(x) {
                 webiopi().callMacro("delPrivilegesSave", [x] );
-                getPage('privilegesSetup');
+                document.cookie = "page=privilegesSetup";
+                getPage(1);
             }
             
             function setPrivilegesAdd(){
                 webiopi().callMacro("setPrivilegesAdd",  '' );
-                getPage('privilegesSetup');
+                document.cookie = "page=privilegesSetup";
+                getPage(1);
             }
-            //Fine pagina setupArea
+            //Fine pagina Privileges
+
+            //Pagina inputSetup
+            var setInputSetup = function (macro, args, response) {
+                res = eval(response);
+                var f = '<form name="setInputSetupForm" id="setInputSetupForm">';
+                f +=    '<div class="fieldSet">';
+                f +=        '<fieldset>';
+                f +=            '<legend>Form Input Setup</legend>';
+                f +=            '<table class="f-h" align=center><tr><th>ID</th><th>Name</th><th>Description</th><th></th></tr>';
+                for (r in res) {
+                    //~ $("#text").html(r + ' - ' + res[r]['name'] + '<br>'); 
+                    f += '<input type="hidden" name="id['+ res[r]['id'] +']" value="'+ res[r]['id'] +'" />';
+                    f += '<td><input type="text" name="name['+ res[r]['id'] +']" value="'+ res[r]['name'] +'" readonly /></td>';
+                    f += '<td><input type="text" name="description['+ res[r]['id'] +']" value="'+ res[r]['description'] +'"  /></td>';
+                    f += '<td><input type="button" id="valida" name="valida" value="Save" onclick=setInputSetupSave('+res[r]["id"]+'); /> ';
+                    //~ f += '<input type="button" id="delete" name="delete" value="Delete" onclick=delPrivilegesSave('+res[r]["id"]+'); /> ';
+                    
+                    f += '</td></tr>';
+                }
+                //~ f += '<tr><td colspan=3><input type="button" id="add" name="add" value="Add" onclick=setInputSetupAdd(); /></td></tr> ';                
+                f +=        '</table>';
+                f +=        '</fieldset>';
+                f +=    '</div>';
+                f += '</form>'; 
+                //~ alert(f);
+                $("#form").html(f);
+            }
+
+            function setInputSetupSave(x) {
+                //~ alert(document.cookie);
+                var r = '';
+                r += 'id='+$('#setInputSetupForm').find('input[name="id['+x+']"]').val();
+                r += ',name='+$('#setInputSetupForm').find('input[name="name['+x+']"]').val();
+                r += ',description='+$('#setInputSetupForm').find('input[name="description['+x+']"]').val();
+                webiopi().callMacro("setInputSetupSave", [r] , setIOSave1);
+            }
+            
+            function setInputSetupSave1() {
+                document.cookie = "page=inputSetup";
+                getPage(1);
+            }
+            
+            function delInputSetupSave(x) {
+                webiopi().callMacro("delInputSetupSave", [x] );
+                document.cookie = "page=inputSetup";
+                getPage(1);
+            }
+            
+            function setInputSetupAdd(){
+                webiopi().callMacro("setInputSetupAdd",  '' );
+                document.cookie = "page=inputSetup";
+                getPage(1);
+            }
+            //Fine pagina inputSetup
+
+            //Begin Board Setup
+            var setBoardSetup = function (macro, args, response) {
+                //~ alert(response);
+                res = eval(response);
+                var f = '<form name="setBoardSetupForm" id="setBoardSetupForm">';
+                f +=    '<div class="fieldSet">';
+                f +=        '<fieldset>';
+                f +=            '<legend>Form Board Setup</legend>';
+                f +=            '<table class="f-h" align=center><tr><th>Name</th><th>Description</th><th title="Board Address">Add</th><th title="Enable">En</th><th>Save</th><th>IO</th></tr>';
+                for (r in res) {                    
+                    f += '<input type="hidden" name="id['+ res[r]['id'] +']" value="'+ res[r]['id'] +'" />';
+                    f += '<td><input type="text" size="6" name="name['+ res[r]['id'] +']" value="'+ res[r]['name'] +'" /></td>';
+                    f += '<td><input type="text" size="16" name="description['+ res[r]['id'] +']" value="'+ res[r]['description'] +'"  /></td>';
+                    f += '<td><input type="text" size="1" name="address['+ res[r]['id'] +']" value="'+ res[r]['address'] +'"  /></td>';
+                    var checked = '';
+                    if (res[r]['enable'] == 1) {checked = 'checked="checked"'; }
+                    f += '<td><input type="checkbox" name="enable['+ res[r]['id'] +']" value="'+ res[r]['enable'] +'" '+checked+'  /></td>';
+                    f += '<td><input type="button" id="valida" name="valida" value="Save" onclick=setBoardSetupSave('+res[r]["id"]+'); /></td>';
+                    f += '<td><input type="button" id="Edit" name="edit" value="Edit" onclick="document.cookie=\'page=boardIOSetup\';getPage(1)"; /></td>';
+                    f += '</tr>';
+                }
+                f +=            '<tr><td colspan=6><input type="button" id="add" name="add" value="Add" onclick="addBoardSetup();"; /></td></tr> ';
+                f +=        '</table>';
+                f +=        '</fieldset>';
+                f +=    '</div>';
+                f += '</form>'; 
+                //~ alert(f);
+                $("#form").html(f);
+            }
+
+            function setBoardSetupSave(id) {
+                //~ alert(x);
+                var r = '';
+                
+                r += 'id='+$('#setBoardSetupForm').find('input[name="id['+id+']"]').val();
+                r += ',name='+$('#setBoardSetupForm').find('input[name="name['+id+']"]').val();
+                r += ',description='+$('#setBoardSetupForm').find('input[name="description['+id+']"]').val();
+                r += ',address='+$('#setBoardSetupForm').find('input[name="address['+id+']"]').val();
+                r += ',enable='+$( "input:checked" ).length;                
+                webiopi().callMacro("setBoardSetupSave", [r] , setBoardSetupSave1);
+            }
+            
+            function setBoardSetupSave1() {
+                document.cookie = "page=boardSetup";
+                getPage(1);
+            }
+            
+            function addBoardSetup(){
+                //~ alert('add');
+                webiopi().callMacro("setBoardSetupAdd",  '' );
+                document.cookie = "page=boardSetup";
+                getPage(1);
+            }            
+            //Fine BoardSetup
+
+            //Board IO Setup           
+            var setBoardIOSetup = function (macro, args, response) {
+                alert(response);
+                res = eval(response);
+                var board = '';
+                var f = '';
+                //~ $.map(res['io'],function (indice,valore) {
+                    //~ f += indice+valore;
+                //~ });
+                //~ for(r in res) {
+                    //~ f += '<div class="fieldSet" style="text-align:center;">';
+                    //~ 
+                    //~ if (board != res[r]['bid']) { //intestazione della board
+                        //~ f += '<p style="font-weight:bold;">' +res[r]['bname']+ '  ' +res[r]['bdescription']+ '  ' +res[r]['benable']+ '</p>';
+                        //~ board = res[r]['bid'];
+                    //~ }
+                    //~ 
+                    //~ f += '<input type="hidden" name="id['+ res[r]['id'] +']" value="'+ res[r]['id'] +'" />';
+                    //~ 
+                    //~ f += '</div>';
+                //~ }
+                //~ f += '&nbsp;&nbsp;&nbsp;<input type="button" name="addIO" value="Add IO" onclick="addIO()"';
+                
+                $("#form").html(f);
+            }
+            
+            
 
             //Encode characters
             function e(str) {return encodeURI(str); }
@@ -360,7 +517,6 @@
 </head>
 <body>
 
-
 <div id="container">
     <div id="title" class="title"></div>
     <div id="user"></div>
@@ -372,12 +528,9 @@
     <div id="text"></div>
     <div id="message"></div>
     <div id="footer"></div>
-    
+    <div id="dialog"></div>
 
 </div>
-
-
-
 
 </body>
 </html>
