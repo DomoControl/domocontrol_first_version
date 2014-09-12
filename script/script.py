@@ -63,8 +63,8 @@ def conn(q):
         c.row_factory = sqlite3.Row
         c.execute(q)
         c.commit()
+        debug("Total number of rows updated : %s" %c.total_changes)
         return c.total_changes
-        #~ debug("Total number of rows updated : %s" %c.total_changes)
     except Exception as e:
         c.rollback()
         raise e
@@ -461,32 +461,55 @@ def setBoardSetupSave(*args):
     debug(q)
     c = conn(q)
     #~ debug("query aggiornate: %s   " %c)
+
+@webiopi.macro
+def addBoardSetup():
+    q = "INSERT INTO pi_board (name,description,enable,address) VALUES ('???','???','0', '0');"
+    #~ debug(q)
+    conn(q)
+    
 #~ END BoardSetup 
 
 #~ Edit IO
 @webiopi.macro             
 def setBoardIOSetup():
-    res = []
-    
-    q = "SELECT b.id bid, b.name bname, b.description bdescription, b.enable benable, i.* FROM pi_board AS b, pi_board_io AS i WHERE b.id=i.board_id;"
-    #~ debug(q)
-    res['board'] = query(q)
+    res = {}
+    q = "SELECT b.id bid, b.name bname, b.description bdescription, b.enable benable, i.* FROM pi_board_io AS i LEFT JOIN pi_board AS b ON (b.id=i.board_id) ORDER BY b.id, id;"
+    debug(q)
+    res['board_io'] = query(q)
     q = "SELECT * FROM pi_io;"
     res['io'] = query(q) 
-    debug(res)
-    
+    q = "SELECT * FROM pi_board;"
+    res['board'] = query(q) 
+    debug(res) 
     return json.dumps(res)
+    
+@webiopi.macro 
+def saveBoardIOSetup(*args):
+    debug(args)
+    q = "UPDATE pi_board_io SET "
+    i=0;
+    for r in args:
+        if r[0:3] == 'id=':
+            ids=r[3:]
+        else:
+            q += r[0:r.find('=')] + "='" + r[r.find('=')+1:] + "',"
+    q = q[:-1]
+    q += " WHERE id=%s" % ids
+    #~ debug(q)
+    c = conn(q)
 
-@webiopi.macro             
-def addIO():
-    q = "INSERT INTO pi_board_io (name, descriptioin) VALUES('???','???')"
+@webiopi.macro
+def addBoardIOSetup():
+    q = "INSERT INTO pi_board_io (io_id, name,description,board_id) VALUES ('1','name','description', '1');"
+    #~ debug(q)
     conn(q)
 
-
-
-
-
-
+@webiopi.macro
+def delBoardIOSetup(*args):
+    q = "DELETE FROM pi_board_io WHERE id="+args[0]
+    #~ debug(q)
+    conn(q)
 
 
 

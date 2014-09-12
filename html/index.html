@@ -471,41 +471,90 @@
             }
             
             function addBoardSetup(){
-                //~ alert('add');
-                webiopi().callMacro("setBoardSetupAdd",  '' );
-                document.cookie = "page=boardSetup";
+                webiopi().callMacro("addBoardSetup",  '' );
                 getPage(1);
             }            
             //Fine BoardSetup
 
             //Board IO Setup           
             var setBoardIOSetup = function (macro, args, response) {
-                alert(response);
-                res = eval(response);
-                var board = '';
+                var res = $.parseJSON(response);
+                //~ alert(res['io'][0]['name']);
+                var bid = '';
                 var f = '';
-                //~ $.map(res['io'],function (indice,valore) {
-                    //~ f += indice+valore;
-                //~ });
-                //~ for(r in res) {
-                    //~ f += '<div class="fieldSet" style="text-align:center;">';
-                    //~ 
-                    //~ if (board != res[r]['bid']) { //intestazione della board
-                        //~ f += '<p style="font-weight:bold;">' +res[r]['bname']+ '  ' +res[r]['bdescription']+ '  ' +res[r]['benable']+ '</p>';
-                        //~ board = res[r]['bid'];
-                    //~ }
-                    //~ 
-                    //~ f += '<input type="hidden" name="id['+ res[r]['id'] +']" value="'+ res[r]['id'] +'" />';
-                    //~ 
-                    //~ f += '</div>';
-                //~ }
-                //~ f += '&nbsp;&nbsp;&nbsp;<input type="button" name="addIO" value="Add IO" onclick="addIO()"';
+                for(r in res['board_io']) {
+                    
+                    //mostra nome della board
+                    if( res['board_io'][r]['bid'] != bid ) {
+                        f += '<p class="title">ID: '+res['board_io'][r]['bid']+ ' - Board name: ' +res['board_io'][r]['description']+'</p>';
+                        bid = res['board_io'][r]['bid'];
+                    }
+                    f += '<div style="border:1px dashed gray; margin:5px; padding:5px;">';
+                    f += '<form name="boardIOForm" id="boardIOForm'+res['board_io'][r]['id']+'">'; 
+                    f += '<input id="id" type="hidden" name="id" value="'+ res['board_io'][r]['id'] +'" />';
+                    
+                    f += '<select id="board_id" name="board_id" title="Select Board IO" >';
+                    var sel = '';
+                    for(bo in res['board']) {
+                        var selected = '';
+                        if( res['board_io'][r]['board_id'] == res['board'][bo]['id'] ){selected='selected=selected';}
+                        f += '<option value="'+res['board'][bo]['id']+'" '+selected+' >'+ res['board'][bo]['name'] +'</option>';
+                    }
+                    f += '</select>';
+                    
+                    f += '<select id="io_id" name="io_id" title="Select Input Type" >';
+                    var sel = '';
+                    for(io in res['io']) {
+                        
+                        var selected = '';
+                        if( res['board_io'][r]['io_id'] == res['io'][io]['id'] ){selected='selected=selected';}
+                        f += '<option value="'+res['io'][io]['id']+'" '+selected+' >'+ res['io'][io]['name'] +'</option>';
+                    }
+                    f += '</select>';
+                    f += '<input type="text" id="name" name="name" value="'+res['board_io'][r]['name']+'" size="5" title="Name of Input" />';
+                    f += '<input type="text" id="description" name="description" value="'+res['board_io'][r]['description']+'" size="8" title="Description of Input" />';
+                    f += '<input type="text" id="address" name="address" value="'+res['board_io'][r]['address']+'" size="1" title="Address of Input" />';
+                    var checked='';
+                    if(res['board_io'][r]['enable'] == 1) {checked='checked=checked';}
+                    f += '<input type="checkbox" id="enable" name="enable" value="'+res['board_io'][r]['enable']+'" '+checked+' title="Input enable" />';
+                    f += '<input type="button" name="save" value="Save" onclick="document.cookie=\'page=boardIOSetup\'; saveBoardIOSetup('+res['board_io'][r]['id']+');" />';
+                    f += '<input type="button" name="del" value="Del" onclick="document.cookie=\'page=boardIOSetup\'; delBoardIOSetup('+res['board_io'][r]['id']+');" />';
+                    f += '</form>';
+                    f += '</div>';
+                }
+                f += '<center><input type="button" id="add" name="add" value="Add input" onclick="addBoardIOSetup();"; />';
                 
+                f += '</center>';
+                //~ f += response;
                 $("#form").html(f);
             }
             
+            function saveBoardIOSetup(id) {
+                var r = '';
+                r += 'id='+$('#boardIOForm'+id).find('input[name="id"]').val();
+                r += ',board_id='+$('#boardIOForm'+id).find('select[name="board_id"]').val() ;
+                r += ',io_id='+$('#boardIOForm'+id).find('select[name="io_id"]').val() ;
+                r += ',name='+$('#boardIOForm'+id).find('input[name="name"]').val();
+                r += ',description='+$('#boardIOForm'+id).find('input[name="description"]').val();
+                r += ',address='+$('#boardIOForm'+id).find('input[name="address"]').val();
+                
+                var enable = $('#boardIOForm'+id).find('input:checkbox:checked').val() ? '1':'0';
+                r += ',enable='+enable;
+                //~ alert(r);
+                webiopi().callMacro("saveBoardIOSetup", [r] );
+                getPage(1);
+            }
             
-
+            function addBoardIOSetup() {
+                webiopi().callMacro("addBoardIOSetup",  '' );
+                getPage(1);
+            }
+            
+            function delBoardIOSetup(id) {
+                webiopi().callMacro("delBoardIOSetup", [id] );
+                getPage(1);
+            }
+                        
             //Encode characters
             function e(str) {return encodeURI(str); }
             
