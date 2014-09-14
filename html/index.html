@@ -69,6 +69,7 @@
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';   
                         $("#form").html('<p class="but"><input type="button" name="status" value="Status" onclick="document.cookie=\'page=menuStatus\';getPage(1)" ></p>' +
                                 '<p class="but"><input type="button" name="setup" value="Setup" onclick="document.cookie=\'page=menuSetup\';getPage(1)" ></p>');                  
+                        $("#form1").html('');
                         break;
                     case 'menuSetup':
                         title = '<small>Menu Setup</small>';
@@ -80,7 +81,9 @@
                             '<p class="but"><input type="button" name="setup" value="Group Privileges" onclick="document.cookie=\'page=groupPrivileges\';getPage(1)" ></p>' +
                             '<p class="but"><input type="button" name="setup" value="Board Setup" onclick="document.cookie=\'page=boardSetup\';getPage(1)" ></p>' +
                             '<p class="but"><input type="button" name="setup" value="Input Setup" onclick="document.cookie=\'page=inputSetup\';getPage(1)" ></p>' +
+                            '<p class="but"><input type="button" name="setup" value="Program Setup" onclick="document.cookie=\'page=programSetup\';getPage(1)" ></p>' +
                             '<p class="but"><input type="button" name="setup" value="Email - SMS Setup" onclick="document.cookie=\'page=email-smsSetup\';getPage(1)" ></p>' );
+                        $("#form1").html('');
                         break;
                     case 'userSetup':
                         title = '<small>User Setup</small>';
@@ -89,7 +92,8 @@
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                         //~ alert(getCookies()['user_id'] + document.cookie);
                         webiopi().callMacro("setUser", getCookies()['user_id'] , setUser);
-                        $("#form").html('')
+                        $("#form").html('');
+                        $("#form1").html('');
                         break;                        
                     case 'areaSetup':
                         title = '<small>Area Setup</small>';
@@ -97,7 +101,8 @@
                         footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage(1)" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                         webiopi().callMacro("setArea", '' , setArea);
-                        $("#form").html('')
+                        $("#form").html('');
+                        $("#form1").html('');
                         break;       
                     case 'groupPrivileges':
                         title = '<small>Group Privileges</small>';
@@ -105,7 +110,8 @@
                         footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage(1)" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                         webiopi().callMacro("setPrivileges", '' , setPrivileges);
-                        $("#form").html('')
+                        $("#form").html('');
+                        $("#form1").html('');
                         break;   
                     case 'inputSetup':
                         title = '<small>Input Setup</small>';
@@ -113,7 +119,8 @@
                         footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage(1)" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                         webiopi().callMacro("setInputSetup", '' , setInputSetup);
-                        $("#form").html('')
+                        $("#form").html('');
+                        $("#form1").html('');
                         break;  
                     case 'boardSetup':
                         title = '<small>Board Setup</small>';
@@ -121,7 +128,8 @@
                         footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage(1)" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                         webiopi().callMacro("setBoardSetup", '' , setBoardSetup);
-                        $("#form").html('')
+                        $("#form").html('');
+                        $("#form1").html('');
                         break;                        
                     case 'boardIOSetup':
                         title = '<small>Board IO Setup</small>';
@@ -130,21 +138,32 @@
                         footer += '<input type="button" name="setup" value="Board Setup" onclick="document.cookie=\'page=boardSetup\';getPage(1)" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                         webiopi().callMacro("setBoardIOSetup", '', setBoardIOSetup);
-                        $("#form").html('')
+                        $("#form").html('');
+                        $("#form1").html('');
                         break;   
                     case 'areaSetup':
                         title = '<small>Area Setup</small>';
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                         footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage(1)" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
-                        $("#form").html('')
+                        $("#form").html('');
+                        $("#form1").html('');
                         break;
+                    case 'programSetup':
+                        title = '<small>Program Setup</small>';
+                        footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
+                        footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage(1)" >';
+                        footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
+                        webiopi().callMacro("programSetup", '', programSetup);
+                        $("#form").html('');
+                        break;                        
                     case 'email-smsSetup':
                         title = '<small>Email - SMS Setup</small>';
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                         footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage(1)" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
-                        $("#form").html('')
+                        $("#form").html('');
+                        $("#form1").html('');
                         break;
                     case 'menuStatus':
                         title = '<small>Status</small>';
@@ -152,6 +171,7 @@
                         footer += '<input type="button" name="setup" value="Menu" onclick="document.cookie=\'page=menu\';getPage(1)" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                         $("#form").html('<center>Pagina da completare</center><br><br>')
+                        $("#form1").html('');
                         break;
                     default:
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
@@ -554,6 +574,173 @@
                 webiopi().callMacro("delBoardIOSetup", [id] );
                 getPage(1);
             }
+            //~ END BoardIOSetup
+            
+            //Function Setup           
+            var programSetup = function (macro, args, response) {
+                var res = $.parseJSON(response);
+                var f = '';
+                f += '<form name="programSelectForm" id="programSelectForm">'; 
+                f += '<center><select id="id" name="id" title="Select Program" >';
+                for(r in res['program']) {
+                    var selected='';
+                    //~ if( res['program'][r]['board_id'] == res['board'][bo]['id'] ){selected='selected=selected';}
+                    f += '<option value="'+res['program'][r]['id']+'" '+selected+' >'+ res['program'][r]['name'] +'</option>';
+                }
+                f += '</select>';
+                f += '<input type="button" name="edit" value="Edit" onclick="document.cookie=\'page=programSetup\'; editProgramSetup();" />';
+                f += '<input type="button" name="delete" value="Delete" onclick="document.cookie=\'page=programSetup\'; deleteProgramSetup();" />';
+                f += '<input type="button" id="add" name="add" value="Add program" onclick="addProgramSetup();"; />';
+                f += '</center></form>';
+                $("#form").html(f);
+            }
+            
+            function editProgramSetup(id) {
+                var r = $('#programSelectForm').find('select[name="id"]').val() ;
+                webiopi().callMacro("getProgramSetup",  [r],  getProgramSetup);
+                getPage(1);
+            }
+
+            function deleteProgramSetup(id) {
+                var r = $('#programSelectForm').find('select[name="id"]').val() ;
+                webiopi().callMacro("deleteProgramSetup",  [r]);
+                getPage(1);
+            }
+            
+            function addProgramSetup() {
+                webiopi().callMacro("addProgramSetup",  '' );
+                getPage(1);
+            }            
+
+            var getProgramSetup = function (macro, args, response) {
+                var res = $.parseJSON(response);
+                var f = '';
+                f += '<div class="form"><form name="ProgramSetupForm" id="ProgramSetupForm"><center>'; 
+                f += '<p style="text-align:center; font-weight:bold;">Program Setup n.'+res['program'][0]['id']+' '+ res['program'][0]['name'] +'</p>';
+                f += '<input id="id" type="hidden" name="id" value="'+ res['program'][0]['id'] +'" />';
+                f += 'Name: <input type="text" id="name" name="name" value="'+res['program'][0]['name']+'" size="8" title="Name of program" />';
+                f += '  Description: <input type="text" id="description" name="description" value="'+res['program'][0]['description']+'" size="10" title="Description of program" /><br/>';
+                f += '<select id="in" name="in" title="Select Input" >';
+                for(r in res['in']) {
+                    var in_selected = '';
+                    if( res['in'][r]['id'] == res['program'][0]['in_id'] ){in_selected='selected=selected';}
+                    f += '<option value="'+res['in'][r]['id']+'" '+in_selected+' title="Select Input" >'+ res['in'][r]['bname'] + ' ' + res['in'][r]['name'] + ' </option>';
+                }
+                f += '</select>';
+                var in_checked='';
+                if(res['program'][0]['in_inverted'] == 1) {in_checked='checked=checked';}
+                f += '<input type="checkbox" id="in_inverted" name="in_inverted" value="'+res['program'][0]['in_inverted']+'" '+in_checked+' title="Select for inverted Input" />';
+                f += '<input type="text" id="in_delay" name="in_delay" value="'+res['program'][0]['in_delay']+'" size="1" title="Input delay" />';
+                f += '<select id="out" name="out" title="Select Output" >';
+                for(r in res['out']) {
+                    var out_selected = '';
+                    if( res['out'][r]['id'] == res['program'][0]['out_id'] ){out_selected='selected=selected';}
+                    f += '<option value="'+res['out'][r]['id']+'" '+out_selected+' title="Select Output" >'+ res['out'][r]['bname'] + ' ' + res['out'][r]['name'] + ' </option>';
+                }
+                f += '</select>';                
+                var out_checked='';
+                if(res['program'][0]['out_inverted'] == 1) {out_checked='checked=checked';}
+                f += '<input type="checkbox" id="out_inverted" name="out_inverted" value="'+res['program'][0]['out_inverted']+'" '+out_checked+' title="Select for inverted Output" />';
+                
+                f += '<select id="type" name="type" title="Select Type Function" onChange="getType('+res['program'][0]['out_function']+');">';
+                for(r in res['type']) {
+                    var type_selected = '';
+                    if( res['type'][r]['id'] == res['program'][0]['type_id'] ){type_selected='selected=selected';}
+                    f += '<option value="'+res['type'][r]['id']+'" '+type_selected+' title="Select Type Function" >'+ res['type'][r]['name'] + ' </option>';
+                }
+                f += '</select>'; 
+
+                
+                f += '<input type="button" name="save" value="Save" onclick="document.cookie=\'page=programSetup\'; saveProgramSetup();" />';
+                f += '</center></form></div>';
+                $("#form1").html(f);
+            }
+            
+            var getType = function(res){
+                var type = $( "#type option:selected" ).val();
+                
+                var f = '';
+                switch (type) {
+                    case '1':
+                    break;
+                    case '2':
+                        f += '<center id="ntype"><p><h3>Insert timer Time (days - hours - minutes - seconds)</h3>';
+                        f += 'D:<input type="number" min="0" max="30" step="1" value="'+res['timer'][0]+'" name="days" id="day" style="width:50px;" /> ';
+                        f += 'H:<input type="number" min="0" max="23" step="1" value="'+res['timer'][1]+'" name="hour" id="hour" style="width:50px;" /> ';
+                        f += 'M:<input type="number" min="0" max="59" step="1" value="'+res['timer'][2]+'" name="minute" id="minute" style="width:50px;" /> ';
+                        f += 'S:</span><input type="number" min="0" max="59" step="1" value="'+res['timer'][3]+'" name="second" id="second" style="width:50px;" /> ';
+                        f += '</p></center>';
+                    break;
+                    case '3':
+                        f += '<center id="ntype"><p><h3>Insert interval (hours - minutes - seconds)</h3>';
+                        var i = 0; var g = '';
+                        for (r in res['chrono']) {
+                            f += 'From: <input type="number" min="0" max="23" step="1" value="'+res['chrono'][r][0]+'" name="ch[]" id="ch" style="width:50px;" /> ';
+                            f += '<input type="number" min="0" max="59" step="1" value="'+res['chrono'][r][1]+'" name="ch[]" id="ch" style="width:50px;" /> ';
+                            f += '<input type="number" min="0" max="59" step="1" value="'+res['chrono'][r][2]+'" name="ch[]" id="ch" style="width:50px;" /> ';
+                            f += 'To: <input type="number" min="0" max="23" step="1" value="'+res['chrono'][r][3]+'" name="ch[]" id="ch" style="width:50px;" /> ';
+                            f += '<input type="number" min="0" max="59" step="1" value="'+res['chrono'][r][4]+'" name="ch[]" id="ch" style="width:50px;" /> ';
+                            f += '<input type="number" min="0" max="59" step="1" value="'+res['chrono'][r][5]+'" name="ch[]" id="ch" style="width:50px;" /><br> ';
+                            i++;
+                        }
+                        
+                        while (i<10) {
+                            f += 'From: <input type="number" min="0" max="23" step="1" value="0" name="ch[]" id="ch" style="width:50px;" /> ';
+                            f += '<input type="number" min="0" max="59" step="1" value="0" name="ch[]" id="ch" style="width:50px;" /> ';
+                            f += '<input type="number" min="0" max="59" step="1" value="0" name="ch[]" id="ch"  style="width:50px;" /> ';
+                            f += 'To: <input type="number" min="0" max="23" step="1" value="0" name="ch[]" id="ch"  style="width:50px;" /> ';
+                            f += '<input type="number" min="0" max="59" step="1" value="0" name="ch[]" id="ch"  style="width:50px;" /> ';
+                            f += '<input type="number" min="0" max="59" step="1" value="0" name="ch[]" id="ch"  style="width:50px;" /><br> ';
+                            i++;
+                        }
+                        f += '</table>';
+                        f += '</p></center>';
+                    break;
+                    case '4':
+                        $( "#form1" ).append( "<p>Remote</p>" ); 
+                    break;
+                }
+                $( "#ntype" ).remove(); 
+                $( "#ProgramSetupForm" ).append(f); 
+            }
+            
+            function saveProgramSetup() {
+                var r = '';
+                r += 'id='+$('#ProgramSetupForm').find('input[name="id"]').val();
+                r += ',name='+$('#ProgramSetupForm').find('input[name="name"]').val();
+                r += ',description='+$('#ProgramSetupForm').find('input[name="description"]').val();
+                r += ',in_id='+$('#ProgramSetupForm').find('select[name="in"]').val() ;
+                var in_inverted=$('#in_inverted').is(':checked') ? '1':'0';
+                r += ',in_inverted='+in_inverted;
+                r += ',in_delay='+$('#ProgramSetupForm').find('input[name="in_delay"]').val();
+                r += ',out_id='+$('#ProgramSetupForm').find('select[name="out"]').val() ;
+                var out_inverted=$('#out_inverted').is(':checked') ? '1':'0';
+                r += ',out_inverted='+out_inverted;
+                var type_id = $('#ProgramSetupForm').find('select[name="type"]').val() ;
+                r += ',type_id='+type_id ;
+                
+                //~ Timer value
+                if(type_id=="2") {
+                var timer = 'timer:[';
+                timer += "'"+$('#ProgramSetupForm').find('input[name="day"]').val()+"',";
+                timer += "'"+$('#ProgramSetupForm').find('input[name="hour"]').val()+"',";
+                timer += "'"+$('#ProgramSetupForm').find('input[name="minute"]').val()+"',";
+                timer += "'"+$('#ProgramSetupForm').find('input[name="second"]').val()+"']";
+                r += timer;
+                }
+                //~ var d = {};
+                //~ d.timer = [day,hour,minute,second];
+                //~ alert(decodeURIComponent($.param(d)));
+                //~ r += ', out_function='+JSON.stringify(d);
+                
+                d.chrono = $('input[name="ch[]"]').serializeArray();
+                
+                //~ alert($('#ProgramSetupForm').find('input[name="ch[]"]').val());
+                //~ alert(JSON.stringify(d));
+                webiopi().callMacro("saveProgramSetup", [r] );
+                //~ $("#form1").html(g);
+                getPage(1);
+            }
                         
             //Encode characters
             function e(str) {return encodeURI(str); }
@@ -574,6 +761,7 @@
     
     <div id="pages"></div>
     <div id="form"></div>
+    <div id="form1"></div>
     <div id="text"></div>
     <div id="message"></div>
     <div id="footer"></div>

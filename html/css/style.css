@@ -39,8 +39,6 @@ body, html {
     
     font-weight: bold;
     margin: 5px;
-    
-    
 }
 
 .type_name {
@@ -140,3 +138,9 @@ label span, .required {
 /*
 table.f-h > tbody > th:first-child {width: 100px; background-color: red;}
 */
+.form {
+    border: 1px dashed gray;
+    background-color:lightyellow;
+    margin:5px;
+    padding: 5px;
+}

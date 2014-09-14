@@ -23,6 +23,7 @@ import webiopi
 import datetime
 import sqlite3
 import json
+import urllib
 from webiopi.devices.digital.pcf8574 import PCF8574
 from array import *
 
@@ -147,7 +148,7 @@ def setup():
 
 
 def loop():
-    
+    """
     cursor = query(portStatus()) #Richiesta dello stato dei PIN dal DB
     
     for r in cursor:
@@ -194,6 +195,7 @@ def loop():
             
         elif(r['type_id'] == 4):
             debug("Lo stato RADIOCOMANDO del PIN %s è cambiato" %r['gpio']) 
+    """
                 
     webiopi.sleep(1)
 
@@ -214,7 +216,7 @@ def getStatus(): #Ritorna lo stato dei pulsanti attivi
 
 @webiopi.macro        
 def getSetupPort(gpio):
-    q="SELECT p.id, p.gpio_id, p.type_id, p.in_out, p.default_state, p.active, p.name, p.timer, p.crono FROM pi_prog p, pi_gpio g WHERE p.gpio_id=g.gpio AND g.gpio=%s" %gpio 
+    q="SELECT p.id, p.gpio_id, p.type_id, p.in_out, p.default_state, p.active, p.name, p.timer, p.crono FROM pi_program p, pi_gpio g WHERE p.gpio_id=g.gpio AND g.gpio=%s" %gpio 
     #~ debug(q)
     return json.dumps(query(q))
 
@@ -225,7 +227,7 @@ def setElements(gpio):
     gpio = gpio[:-2]   
     
     st = gpio.split(';;')
-    q = "UPDATE pi_prog SET "
+    q = "UPDATE pi_program SET "
     id = ''
     i = 0
     
@@ -247,7 +249,7 @@ def setElements(gpio):
 @webiopi.macro
 def addBt(): #Ritorna i GPIO che si possono aggiungere
     #~ debug('addButton')
-    q = "SELECT gpio, id, name FROM pi_gpio WHERE  gpio <> '' AND active=1 AND gpio NOT IN ( SELECT gpio_id FROM pi_prog )  ORDER BY 'CAST(name)'"
+    q = "SELECT gpio, id, name FROM pi_gpio WHERE  gpio <> '' AND active=1 AND gpio NOT IN ( SELECT gpio_id FROM pi_program )  ORDER BY 'CAST(name)'"
     return json.dumps(query(q))
 
 @webiopi.macro             
@@ -266,7 +268,7 @@ def addGPIO(gpio): #Ritorna i GPIO che si possono aggiungere
     qk = qk[:-2]
     qv = qv[:-2]
     #~ debug('%s   %s' %(qk, qv))
-    q = "INSERT INTO pi_prog (" + qk + ") VALUES (" + qv + ");"
+    q = "INSERT INTO pi_program (" + qk + ") VALUES (" + qv + ");"
     debug(q)    
     conn(q)
     setup()
@@ -276,12 +278,7 @@ def getTimer():
     #~ debug(TIMER) 
     return json.dumps(TIMER)
     
-@webiopi.macro             
-def deleteGPIO(gpio):
-    q = "DELETE FROM pi_prog WHERE gpio_id = '%s';" %gpio
-    debug(q)  
-    conn(q)
-    
+
     
 #~*************** INIZIO NUOVO DOMOCONTROL *******************
 
@@ -475,13 +472,13 @@ def addBoardSetup():
 def setBoardIOSetup():
     res = {}
     q = "SELECT b.id bid, b.name bname, b.description bdescription, b.enable benable, i.* FROM pi_board_io AS i LEFT JOIN pi_board AS b ON (b.id=i.board_id) ORDER BY b.id, id;"
-    debug(q)
+    #~ debug(q)
     res['board_io'] = query(q)
     q = "SELECT * FROM pi_io;"
     res['io'] = query(q) 
     q = "SELECT * FROM pi_board;"
     res['board'] = query(q) 
-    debug(res) 
+    #~ debug(res) 
     return json.dumps(res)
     
 @webiopi.macro 
@@ -511,9 +508,56 @@ def delBoardIOSetup(*args):
     #~ debug(q)
     conn(q)
 
+@webiopi.macro
+def programSetup(*args):
+    res = {}
+    q = "SELECT * FROM pi_program"
+    res['program'] = query(q)
+    #~ debug(res)
+    return json.dumps(res)
 
+@webiopi.macro
+def getProgramSetup(*args):
+    res = {}
+    q = "SELECT * FROM pi_program WHERE id="+args[0]
+    res['program'] = query(q)
+    q = "SELECT i.name ioname, bi.*, b.name bname, b.description bdescription FROM pi_board_io bi, pi_io i, pi_board b WHERE bi.io_id=i.id AND bi.board_id=b.id AND i.name='in';"
+    res['in'] = query(q)
+    q = "SELECT i.name ioname, bi.*, b.name bname, b.description bdescription FROM pi_board_io bi, pi_io i, pi_board b WHERE bi.io_id=i.id AND bi.board_id=b.id AND i.name='out';"
+    res['out'] = query(q)
+    q = "SELECT * FROM pi_type;"
+    res['type'] = query(q)
+    debug(res)
+    return json.dumps(res)
 
-#~ def login(username,password):
-    #~ pass
-#~ setattr(webiopi.Server, 'login', login )
+@webiopi.macro
+def deleteProgramSetup(*args):
+    q = "DELETE FROM pi_program WHERE id="+args[0]
+    debug(q)
+    conn(q)
 
+@webiopi.macro
+def addProgramSetup():
+    q = "INSERT INTO pi_program (in_id, out_id) VALUES ('0','0');"
+    #~ debug(q)
+    conn(q)
+
+@webiopi.macro 
+def saveProgramSetup(*args):
+    #~ s = urllib.unquote(args)
+    #~ debug(s)
+    for r in args:
+        debug(urllib.parse.unquote(r))
+    
+        
+    #~ q = "UPDATE pi_program SET "
+    #~ i=0;
+    #~ for r in args:
+        #~ if r[0:3] == 'id=':
+            #~ ids=r[3:]
+        #~ else:
+            #~ q += r[0:r.find('=')] + "='" + r[r.find('=')+1:] + "',"
+    #~ q = q[:-1]
+    #~ q += " WHERE id=%s" % ids
+    #~ debug(q)
+    #~ c = conn(q)
