@@ -614,6 +614,7 @@
 
             var getProgramSetup = function (macro, args, response) {
                 var res = $.parseJSON(response);
+                window.globalVar = res;
                 var f = '';
                 f += '<div class="form"><form name="ProgramSetupForm" id="ProgramSetupForm"><center>'; 
                 f += '<p style="text-align:center; font-weight:bold;">Program Setup n.'+res['program'][0]['id']+' '+ res['program'][0]['name'] +'</p>';
@@ -642,56 +643,54 @@
                 if(res['program'][0]['out_inverted'] == 1) {out_checked='checked=checked';}
                 f += '<input type="checkbox" id="out_inverted" name="out_inverted" value="'+res['program'][0]['out_inverted']+'" '+out_checked+' title="Select for inverted Output" />';
                 
-                f += '<select id="type" name="type" title="Select Type Function" onChange="getType('+res['program'][0]['out_function']+');">';
+                f += '<select id="type" name="type" title="Select Type Function" onChange="getType();">';
                 for(r in res['type']) {
                     var type_selected = '';
                     if( res['type'][r]['id'] == res['program'][0]['type_id'] ){type_selected='selected=selected';}
                     f += '<option value="'+res['type'][r]['id']+'" '+type_selected+' title="Select Type Function" >'+ res['type'][r]['name'] + ' </option>';
                 }
                 f += '</select>'; 
-
+                
+                
                 
                 f += '<input type="button" name="save" value="Save" onclick="document.cookie=\'page=programSetup\'; saveProgramSetup();" />';
                 f += '</center></form></div>';
                 $("#form1").html(f);
+                getType();
             }
             
-            var getType = function(res){
+            function getType(){
+                var res = window.globalVar;
                 var type = $( "#type option:selected" ).val();
-                
+                //~ alert(JSON.stringify(res['program'][0]['timer']));
+                //~ alert(eval(res['program'][0]['timer'])[1]);
                 var f = '';
                 switch (type) {
                     case '1':
                     break;
                     case '2':
+                        var t = res['program'][0]['timer'];
+                        t = t.split(';'); 
                         f += '<center id="ntype"><p><h3>Insert timer Time (days - hours - minutes - seconds)</h3>';
-                        f += 'D:<input type="number" min="0" max="30" step="1" value="'+res['timer'][0]+'" name="days" id="day" style="width:50px;" /> ';
-                        f += 'H:<input type="number" min="0" max="23" step="1" value="'+res['timer'][1]+'" name="hour" id="hour" style="width:50px;" /> ';
-                        f += 'M:<input type="number" min="0" max="59" step="1" value="'+res['timer'][2]+'" name="minute" id="minute" style="width:50px;" /> ';
-                        f += 'S:</span><input type="number" min="0" max="59" step="1" value="'+res['timer'][3]+'" name="second" id="second" style="width:50px;" /> ';
+                        f += 'D:<input type="number" min="0" max="30" step="1" value="'+t[0]+'" name="day" id="day" style="width:50px;" /> ';
+                        f += 'H:<input type="number" min="0" max="23" step="1" value="'+t[1]+'" name="hour" id="hour" style="width:50px;" /> ';
+                        f += 'M:<input type="number" min="0" max="59" step="1" value="'+t[2]+'" name="minute" id="minute" style="width:50px;" /> ';
+                        f += 'S:<input type="number" min="0" max="59" step="1" value="'+t[3]+'" name="second" id="second" style="width:50px;" /> ';
                         f += '</p></center>';
                     break;
                     case '3':
                         f += '<center id="ntype"><p><h3>Insert interval (hours - minutes - seconds)</h3>';
-                        var i = 0; var g = '';
-                        for (r in res['chrono']) {
-                            f += 'From: <input type="number" min="0" max="23" step="1" value="'+res['chrono'][r][0]+'" name="ch[]" id="ch" style="width:50px;" /> ';
-                            f += '<input type="number" min="0" max="59" step="1" value="'+res['chrono'][r][1]+'" name="ch[]" id="ch" style="width:50px;" /> ';
-                            f += '<input type="number" min="0" max="59" step="1" value="'+res['chrono'][r][2]+'" name="ch[]" id="ch" style="width:50px;" /> ';
-                            f += 'To: <input type="number" min="0" max="23" step="1" value="'+res['chrono'][r][3]+'" name="ch[]" id="ch" style="width:50px;" /> ';
-                            f += '<input type="number" min="0" max="59" step="1" value="'+res['chrono'][r][4]+'" name="ch[]" id="ch" style="width:50px;" /> ';
-                            f += '<input type="number" min="0" max="59" step="1" value="'+res['chrono'][r][5]+'" name="ch[]" id="ch" style="width:50px;" /><br> ';
-                            i++;
-                        }
-                        
-                        while (i<10) {
-                            f += 'From: <input type="number" min="0" max="23" step="1" value="0" name="ch[]" id="ch" style="width:50px;" /> ';
-                            f += '<input type="number" min="0" max="59" step="1" value="0" name="ch[]" id="ch" style="width:50px;" /> ';
-                            f += '<input type="number" min="0" max="59" step="1" value="0" name="ch[]" id="ch"  style="width:50px;" /> ';
-                            f += 'To: <input type="number" min="0" max="23" step="1" value="0" name="ch[]" id="ch"  style="width:50px;" /> ';
-                            f += '<input type="number" min="0" max="59" step="1" value="0" name="ch[]" id="ch"  style="width:50px;" /> ';
-                            f += '<input type="number" min="0" max="59" step="1" value="0" name="ch[]" id="ch"  style="width:50px;" /><br> ';
-                            i++;
+                        var c = res['program'][0]['chrono'];
+                        c = c.split(';');
+                        alert(c.length);
+                        for(i = 0; i<c.length;) {
+                            f += 'From: <input type="number" min="0" max="23" step="1" value="'+c[i++]+'" name="ch'+i+'" id="ch" style="width:50px;" /> ';
+                            f += '<input type="number" min="0" max="59" step="1" value="'+c[i++]+'" name="ch'+i+'" id="ch" style="width:50px;" /> ';
+                            f += '<input type="number" min="0" max="59" step="1" value="'+c[i++]+'" name="ch'+i+'" id="ch"  style="width:50px;" /> ';
+                            f += 'To: <input type="number" min="0" max="23" step="1" value="'+c[i++]+'" name="ch'+i+'" id="ch"  style="width:50px;" /> ';
+                            f += '<input type="number" min="0" max="59" step="1" value="'+c[i++]+'" name="ch'+i+'" id="ch"  style="width:50px;" /> ';
+                            f += '<input type="number" min="0" max="59" step="1" value="'+c[i++]+'" name="ch'+i+'" id="ch"  style="width:50px;" /><br> ';
+                            
                         }
                         f += '</table>';
                         f += '</p></center>';
@@ -702,6 +701,7 @@
                 }
                 $( "#ntype" ).remove(); 
                 $( "#ProgramSetupForm" ).append(f); 
+                return f;
             }
             
             function saveProgramSetup() {
@@ -720,25 +720,25 @@
                 r += ',type_id='+type_id ;
                 
                 //~ Timer value
-                if(type_id=="2") {
-                var timer = 'timer:[';
-                timer += "'"+$('#ProgramSetupForm').find('input[name="day"]').val()+"',";
-                timer += "'"+$('#ProgramSetupForm').find('input[name="hour"]').val()+"',";
-                timer += "'"+$('#ProgramSetupForm').find('input[name="minute"]').val()+"',";
-                timer += "'"+$('#ProgramSetupForm').find('input[name="second"]').val()+"']";
-                r += timer;
+                if(type_id=="2") {                    
+                    var timer = ',timer=';
+                    timer += $('#ProgramSetupForm').find('input[name="day"]').val()+';';
+                    timer += $('#ProgramSetupForm').find('input[name="hour"]').val()+';';
+                    timer += $('#ProgramSetupForm').find('input[name="minute"]').val()+';';
+                    timer += $('#ProgramSetupForm').find('input[name="second"]').val()+'';
+                    r += timer;
                 }
-                //~ var d = {};
-                //~ d.timer = [day,hour,minute,second];
-                //~ alert(decodeURIComponent($.param(d)));
-                //~ r += ', out_function='+JSON.stringify(d);
+                //~ Chrono value
+                if(type_id=="3") {
+                    var c=',chrono=';
+                    for (i=1; i<60; i++){
+                        c += $('#ProgramSetupForm').find('input[name="ch'+i+'"]').val();
+                        if(i<59){c += ';';}
+                    }
+                    r += c;
+                }
                 
-                d.chrono = $('input[name="ch[]"]').serializeArray();
-                
-                //~ alert($('#ProgramSetupForm').find('input[name="ch[]"]').val());
-                //~ alert(JSON.stringify(d));
                 webiopi().callMacro("saveProgramSetup", [r] );
-                //~ $("#form1").html(g);
                 getPage(1);
             }
                         

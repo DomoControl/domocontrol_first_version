@@ -527,7 +527,7 @@ def getProgramSetup(*args):
     res['out'] = query(q)
     q = "SELECT * FROM pi_type;"
     res['type'] = query(q)
-    debug(res)
+    #~ debug(res)
     return json.dumps(res)
 
 @webiopi.macro
@@ -538,7 +538,7 @@ def deleteProgramSetup(*args):
 
 @webiopi.macro
 def addProgramSetup():
-    q = "INSERT INTO pi_program (in_id, out_id) VALUES ('0','0');"
+    q = "INSERT INTO pi_program (in_id, out_id, timer) VALUES ('0','0', '%s');"    
     #~ debug(q)
     conn(q)
 
@@ -546,18 +546,20 @@ def addProgramSetup():
 def saveProgramSetup(*args):
     #~ s = urllib.unquote(args)
     #~ debug(s)
-    for r in args:
-        debug(urllib.parse.unquote(r))
-    
-        
-    #~ q = "UPDATE pi_program SET "
-    #~ i=0;
     #~ for r in args:
-        #~ if r[0:3] == 'id=':
-            #~ ids=r[3:]
-        #~ else:
-            #~ q += r[0:r.find('=')] + "='" + r[r.find('=')+1:] + "',"
-    #~ q = q[:-1]
-    #~ q += " WHERE id=%s" % ids
-    #~ debug(q)
-    #~ c = conn(q)
+    
+    q = "UPDATE pi_program SET "
+    i=0;
+    for r in args:
+        if r[0:3] == 'id=':
+            ids=r[3:]
+        else:
+            q += r[0:r.find('=')] + "='" + r[r.find('=')+1:] + "',"
+    q = q[:-1]
+    q += " WHERE id=%s" % ids
+    debug(q)
+    c = conn(q)
+
+def url(t):
+    debug(urllib.parse.unquote(t))
+    return urllib.parse.unquote(t)
