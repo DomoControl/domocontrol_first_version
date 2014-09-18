@@ -55,6 +55,11 @@ enabled = true port = 8080 doc-root = /home/pi/domocontrol/html/
 - Tramite browser collegarsi a indirizzo_raspberry:8080
 
 
+=== INSTALLAZIONE GITHUB ===
+generare la chiave ssh per evitare di digitare sempre username - password per fare gli update:
+vedi qui: https://help.github.com/articles/generating-ssh-keys
+
+
 Per segnalare errori, modifiche, soluzioni, consigli -> https://github.com/lucasub/domocontrol/issues/new
 Grazie
 ------
