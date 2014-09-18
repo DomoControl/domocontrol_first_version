@@ -10,14 +10,15 @@
     <script type="text/javascript"> 
 
         //Ciclo principale
-        webiopi().ready(
-            function() {
+        webiopi().ready(function() {
+            getPage(1);
                 
-                getPage(1);
                 
-                webiopi().refreshGPIO();
-            });
-            // Fine main ciclo
+                
+                
+            webiopi().refreshGPIO();
+        });
+        // Fine main ciclo
             
             //Funzione che trasforma i cookie in array
             function getCookies() {
@@ -43,7 +44,7 @@
                 var title;
                 var footer;
                 var page = getCookies()['page'];
-                if(typeof(page) == 'undefined' ) {page = "login";} //init if page is not set
+                if(typeof(page) == 'undefined' ) {document.cookie='page=""';} //init if page is not set
                 //~ alert(document.cookie);
                 logt(page); //Send LOG
                 switch(page) {
@@ -68,7 +69,7 @@
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';   
                         $("#form").html('<p class="but"><input type="button" name="status" value="Status" onclick="document.cookie=\'page=menuStatus\';getPage(1)" ></p>' +
-                                '<p class="but"><input type="button" name="setup" value="Setup" onclick="document.cookie=\'page=menuSetup\';getPage(1)" ></p>');                  
+                            '<p class="but"><input type="button" name="setup" value="Setup" onclick="document.cookie=\'page=menuSetup\';getPage(1)" ></p>');                  
                         $("#form1").html('');
                         break;
                     case 'menuSetup':
@@ -170,7 +171,8 @@
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                         footer += '<input type="button" name="setup" value="Menu" onclick="document.cookie=\'page=menu\';getPage(1)" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
-                        $("#form").html('<center>Pagina da completare</center><br><br>')
+                        webiopi().callMacro("getMenuStatus", '', getMenuStatus);
+                        $("#form").html('')
                         $("#form1").html('');
                         break;
                     default:
@@ -180,6 +182,16 @@
                 $("#title").html('<h1>DomoControl - ' + title + '</h1>');
                 $("#footer").html(footer);
                 return
+            }
+            
+            function getMenuStatus(){
+                document.cookie = "page = menuStatus;";
+                webiopi().callMacro("menuStatus", '', setMenuStatus);
+                
+            }
+            
+            function setMenuStatus(){
+                
             }
             
             //verifica se le credenziali sono corrette
@@ -197,12 +209,23 @@
                 if(response == "Login_NO") {
                     alert("Username e Password non validi");    
                 } else {
+                    var date = new Date();
+                    var minutes = 240;
+                    date.setTime(date.getTime() + (minutes * 60 * 1000));
+                    var expires = "expires="+date.toUTCString();
+                    
                     var res = $.parseJSON(response)[0];
+                    //~ $.cookie("user_id", res['id']);
+                    //~ $.cookie("username", res['username']);
+                    //~ $.cookie("name", res['name']);
+                    //~ $.cookie("surname", res['surname']);
+                    //~ $.cookie("page", res['menu'] , { expires: date });
                     document.cookie = "user_id = " +res ['id'];
                     document.cookie = "username = " +res ['username'];
                     document.cookie = "name = " +res['name'];
                     document.cookie = "surname = " +res['surname'];
-                    document.cookie = "page = menu";
+                    document.cookie = "page = menu;" + expires;
+                    //~ alert(document.cookie);
                     getPage(1);
                 }
                 
@@ -451,15 +474,17 @@
                 f +=    '<div class="fieldSet">';
                 f +=        '<fieldset>';
                 f +=            '<legend>Form Board Setup</legend>';
-                f +=            '<table class="f-h" align=center><tr><th>Name</th><th>Description</th><th title="Board Address">Add</th><th title="Enable">En</th><th>Save</th><th>IO</th></tr>';
+                f +=            '<table class="f-h" align=center><tr><th>Name</th><th>Description</th><th title="Board Address">Add</th><th title="Enable">BT</th><th>En</th><th>Save</th><th>IO</th></tr>';
                 for (r in res) {                    
                     f += '<input type="hidden" name="id['+ res[r]['id'] +']" value="'+ res[r]['id'] +'" />';
                     f += '<td><input type="text" size="6" name="name['+ res[r]['id'] +']" value="'+ res[r]['name'] +'" /></td>';
                     f += '<td><input type="text" size="16" name="description['+ res[r]['id'] +']" value="'+ res[r]['description'] +'"  /></td>';
                     f += '<td><input type="text" size="1" name="address['+ res[r]['id'] +']" value="'+ res[r]['address'] +'"  /></td>';
+                    f += '<td><input type="text" size="1" name="board_type['+ res[r]['id'] +']" value="'+ res[r]['board_type'] +'" title="Board Type: 1-I2C 2-RS485" /></td>';
                     var checked = '';
                     if (res[r]['enable'] == 1) {checked = 'checked="checked"'; }
-                    f += '<td><input type="checkbox" name="enable['+ res[r]['id'] +']" value="'+ res[r]['enable'] +'" '+checked+'  /></td>';
+                    
+                    f += '<td><input type="checkbox" id="enable'+res[r]['id']+'" name="enable['+ res[r]['id'] +']" value="'+ res[r]['enable'] +'" '+checked+'  /></td>';
                     f += '<td><input type="button" id="valida" name="valida" value="Save" onclick=setBoardSetupSave('+res[r]["id"]+'); /></td>';
                     f += '<td><input type="button" id="Edit" name="edit" value="Edit" onclick="document.cookie=\'page=boardIOSetup\';getPage(1)"; /></td>';
                     f += '</tr>';
@@ -481,7 +506,10 @@
                 r += ',name='+$('#setBoardSetupForm').find('input[name="name['+id+']"]').val();
                 r += ',description='+$('#setBoardSetupForm').find('input[name="description['+id+']"]').val();
                 r += ',address='+$('#setBoardSetupForm').find('input[name="address['+id+']"]').val();
-                r += ',enable='+$( "input:checked" ).length;                
+                var enable = $('#enable'+id).is(':checked') ? 1 : 0;
+                r += ',enable=' + enable;
+                r += ',board_type='+$('#setBoardSetupForm').find('input[name="board_type['+id+']"]').val();
+                //~ alert(r); 
                 webiopi().callMacro("setBoardSetupSave", [r] , setBoardSetupSave1);
             }
             
@@ -682,14 +710,15 @@
                         f += '<center id="ntype"><p><h3>Insert interval (hours - minutes - seconds)</h3>';
                         var c = res['program'][0]['chrono'];
                         c = c.split(';');
-                        alert(c.length);
+                        //~ alert(c.length);
                         for(i = 0; i<c.length;) {
-                            f += 'From: <input type="number" min="0" max="23" step="1" value="'+c[i++]+'" name="ch'+i+'" id="ch" style="width:50px;" /> ';
-                            f += '<input type="number" min="0" max="59" step="1" value="'+c[i++]+'" name="ch'+i+'" id="ch" style="width:50px;" /> ';
-                            f += '<input type="number" min="0" max="59" step="1" value="'+c[i++]+'" name="ch'+i+'" id="ch"  style="width:50px;" /> ';
-                            f += 'To: <input type="number" min="0" max="23" step="1" value="'+c[i++]+'" name="ch'+i+'" id="ch"  style="width:50px;" /> ';
-                            f += '<input type="number" min="0" max="59" step="1" value="'+c[i++]+'" name="ch'+i+'" id="ch"  style="width:50px;" /> ';
-                            f += '<input type="number" min="0" max="59" step="1" value="'+c[i++]+'" name="ch'+i+'" id="ch"  style="width:50px;" /><br> ';
+                            f += 'From: <input type="number" min="0" max="23" step="1" value="'+c[i++]+'" name="ch'+i+'" id="ch" style="width:40px;" /> ';
+                            f += '<input type="number" min="0" max="59" step="1" value="'+c[i++]+'" name="ch'+i+'" id="ch" style="width:40px;" /> ';
+                            f += '<input type="number" min="0" max="59" step="1" value="'+c[i++]+'" name="ch'+i+'" id="ch"  style="width:40px;" /> ';
+                            f += 'To: <input type="number" min="0" max="23" step="1" value="'+c[i++]+'" name="ch'+i+'" id="ch"  style="width:40px;" /> ';
+                            f += '<input type="number" min="0" max="59" step="1" value="'+c[i++]+'" name="ch'+i+'" id="ch"  style="width:40px;" /> ';
+                            f += '<input type="number" min="0" max="59" step="1" value="'+c[i++]+'" name="ch'+i+'" id="ch"  style="width:40px;" /> ';
+                            f += '<input type="button" id="clear" name="clear" value="Clear" onclick="clearInput('+i+');" /><br>'
                             
                         }
                         f += '</table>';
@@ -702,6 +731,18 @@
                 $( "#ntype" ).remove(); 
                 $( "#ProgramSetupForm" ).append(f); 
                 return f;
+            }
+            
+            function clearInput(i){
+                //~ $('#ProgramSetupForm').find('input[name="ch'+i+'"]').val(99);
+                $( 'input[name="ch'+i+'"]' ).text(9)
+                //~ alert($('#ch').find('input[name="ch'+i+'"]').val());
+                $('#ProgramSetupForm').find('input[name="ch'+i+'"]').val(0);
+                $('#ProgramSetupForm').find('input[name="ch'+--i+'"]').val(0);
+                $('#ProgramSetupForm').find('input[name="ch'+--i+'"]').val(0);
+                $('#ProgramSetupForm').find('input[name="ch'+--i+'"]').val(0);
+                $('#ProgramSetupForm').find('input[name="ch'+--i+'"]').val(0);
+                $('#ProgramSetupForm').find('input[name="ch'+--i+'"]').val(0);
             }
             
             function saveProgramSetup() {
@@ -731,9 +772,9 @@
                 //~ Chrono value
                 if(type_id=="3") {
                     var c=',chrono=';
-                    for (i=1; i<60; i++){
+                    for (i=1; i<61; i++){
                         c += $('#ProgramSetupForm').find('input[name="ch'+i+'"]').val();
-                        if(i<59){c += ';';}
+                        if(i<60){c += ';';}
                     }
                     r += c;
                 }

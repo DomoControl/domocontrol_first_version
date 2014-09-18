@@ -42,14 +42,14 @@ DATABASE = '/home/pi/domocontrol/db/db.sqlite'
 #~ server.addMacro(myMacroWithArgs)
 #~ server.addMacro(myMacroWithoutArgs)
 
-
+PROGRAM = {} #Array dove inserire lo stato delle variabili
 GPIO = webiopi.GPIO
 TIMER = {} #Dizionario con il valore di tutti i timer
 
 
-so = PCF8574(32)
-si = PCF8574(33)
-pcf = {1:1, 2:2, 3:4, 4:8, 5:16, 6:32, 7:64, 8:256}   #map output port
+#~ so = PCF8574(32)
+#~ si = PCF8574(33)
+mapp = {1:1, 2:2, 3:4, 4:8, 5:16, 6:32, 7:64, 8:256}   #map output port
 #~ debug(dir(so))
 
 
@@ -73,8 +73,6 @@ def conn(q):
         # Close the db connection
         c.close()
     
-    
-
 def dict_factory(cursor, row): #trasforma il risultato di una queri in un dizionario (vedi funzione query())
     d = {}
     for idx, col in enumerate(cursor.description):
@@ -109,22 +107,39 @@ def setState(n, state):
 
 def portStatus():
     """Query che restituisce lo stato dei BUTTONS"""
-    q = """SELECT p.id, p.in_out, p.type_id, p.default_state, p.name, p.timer, p.crono,
-                    g.pin,  g.type, g.gpio, g.name as gname,
-                    t.name as type_name
-        FROM pi_prog p, pi_gpio g, pi_type t 
-        WHERE p.gpio_id=g.gpio AND p.type_id=t.id AND  g.type LIKE "%IN/OUT%"
-        ORDER BY p.id; """
+    #~ q = """SELECT p.id, p.in_out, p.type_id, p.default_state, p.name, p.timer, p.crono,
+                    #~ g.pin,  g.type, g.gpio, g.name as gname,
+                    #~ t.name as type_name
+        #~ FROM pi_prog p, pi_gpio g, pi_type t 
+        #~ WHERE p.gpio_id=g.gpio AND p.type_id=t.id AND  g.type LIKE "%IN/OUT%"
+        #~ ORDER BY p.id; """
+    q = "SELECT * FROM pi_program;"
     #~ debug(q)
     return q
 
 #~ debug(dir(so))
 
+def setBoard(): #Setta l'indirizzo delle board
+    board = {}
+    q = "SELECT * FROM pi_board WHERE enable=1"
+    res = query(q) 
+    for r in res:
+        debug(r)
+        if r['board_type'] == 1: #Board I2C
+            board[r['id']] = PCF8574(int(r['address']))
+        elif r['board_type'] == 2: #Board RS485
+            pass
+        else:
+            pass
+        
+
 def setup():
-    #~ debug('Start Webiopi')
-    so.portWrite(0)
-    si.portWrite(0xff)
+    setBoard() #Setta le schede
+    #~ so.portWrite(0)
+    #~ si.portWrite(0xff)
     
+
+    """
     cursor = query(portStatus()) #Richiesta dello stato dei PIN dal DB
     for r in cursor:
         
@@ -145,12 +160,29 @@ def setup():
 
         if r['type_id'] == 4:
             debug('Settaggio GPIO %s nello stato %s ' % (r['gpio'], 'Radiocomando'))
-
+    """
 
 def loop():
-    """
     cursor = query(portStatus()) #Richiesta dello stato dei PIN dal DB
     
+    for r in cursor:
+        if r['type_id'] == 1: #On/OFF
+            debug(r)
+            
+            if r['in_id'] == r['in_inverted']:
+                pass
+            
+            pass
+        if r['type_id'] == 2: #Timer
+            #~ debug(r)
+            pass
+        if r['type_id'] == 3: #Chrono
+            #~ debug(r)
+            pass
+    
+    """
+
+    cursor = query(portStatus()) #Richiesta dello stato dei PIN dal DB    
     for r in cursor:
         #~ debug("%s    %s" %(r['default_state'], GPIO.digitalRead(eval(r['gpio']))))
         if r['type_id'] < 3 and r['default_state'] == GPIO.digitalRead(eval(r['gpio'])):
@@ -197,7 +229,7 @@ def loop():
             debug("Lo stato RADIOCOMANDO del PIN %s è cambiato" %r['gpio']) 
     """
                 
-    webiopi.sleep(1)
+    webiopi.sleep(10)
 
 
 def destroy():
@@ -544,10 +576,6 @@ def addProgramSetup():
 
 @webiopi.macro 
 def saveProgramSetup(*args):
-    #~ s = urllib.unquote(args)
-    #~ debug(s)
-    #~ for r in args:
-    
     q = "UPDATE pi_program SET "
     i=0;
     for r in args:
@@ -559,6 +587,20 @@ def saveProgramSetup(*args):
     q += " WHERE id=%s" % ids
     debug(q)
     c = conn(q)
+
+@webiopi.macro 
+def getMenuStatus(*args):
+    res = {}
+    q = """SELECT * FROM pi_program """
+    res['program'] = query(q)
+    q = """SELECT * FROM pi_board_io """
+    res['board_io'] = query(q)
+    q = """SELECT * FROM pi_board """
+    res['board'] = query(q)
+    q = """SELECT * FROM pi_type """
+    res['type'] = query(q)
+    
+    debug(res)
 
 def url(t):
     debug(urllib.parse.unquote(t))
