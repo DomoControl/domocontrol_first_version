@@ -25,14 +25,13 @@ import sqlite3
 import json
 import urllib
 from webiopi.devices.digital.pcf8574 import PCF8574
-from array import *
-
+from bitarray import bitarray
 
 def NOW(): 
     return datetime.datetime.now()    
     
 def debug(x):
-    webiopi.debug("***************** %s  %s \n" % (NOW(), x))
+    webiopi.debug("==>> %s  %s \n" % (NOW(), x))
 
     
 LOG = '/home/pi/domocontrol/test.log'
@@ -42,14 +41,16 @@ DATABASE = '/home/pi/domocontrol/db/db.sqlite'
 #~ server.addMacro(myMacroWithArgs)
 #~ server.addMacro(myMacroWithoutArgs)
 
-PROGRAM = {} #Array dove inserire lo stato delle variabili
+P = {} #Array dove inserire lo stato delle variabili
+M = {1:1, 2:2, 3:4, 4:8, 5:16, 6:32, 7:64} #Mapping IO and OUT pin
+Q = {} #Create dict to put element to send to Status Menu
 GPIO = webiopi.GPIO
 TIMER = {} #Dizionario con il valore di tutti i timer
 
 
 #~ so = PCF8574(32)
 #~ si = PCF8574(33)
-mapp = {1:1, 2:2, 3:4, 4:8, 5:16, 6:32, 7:64, 8:256}   #map output port
+
 #~ debug(dir(so))
 
 
@@ -72,8 +73,8 @@ def conn(q):
     finally:
         # Close the db connection
         c.close()
-    
-def dict_factory(cursor, row): #trasforma il risultato di una queri in un dizionario (vedi funzione query())
+
+def dict_factory(cursor, row): #funzione abbinata a query()
     d = {}
     for idx, col in enumerate(cursor.description):
         d[col[0]] = row[idx]
@@ -86,234 +87,143 @@ def query(q): #return list with dictionary
     cur = con.cursor()
     cur.execute(q)
     return cur.fetchall()
-
-def setIO(n, io):
-    """Set IN/OUT GPIO"""
-    if io == 1:  # 1 = Input
-        GPIO.setFunction(int(n), GPIO.IN)
-    elif io == 0:
-        GPIO.setFunction(int(n), GPIO.OUT)
-    #~ debug('Il port n.%s e settato come %s' % (n, GPIO.getFunctionString(int(n))))
-
-def setState(n, state):
-    """Set GPIO to 1 or 0"""
-    state = int(state)
-    n = int(n)
-    if state == 0:
-        GPIO.digitalWrite(n, GPIO.LOW)
-    elif state == 1:
-        GPIO.digitalWrite(n, GPIO.HIGH)
-    #debug('Il port n.%s ha il valore: %s' % (n, GPIO.digitalRead(n)))
-
+    
 def portStatus():
-    """Query che restituisce lo stato dei BUTTONS"""
-    #~ q = """SELECT p.id, p.in_out, p.type_id, p.default_state, p.name, p.timer, p.crono,
-                    #~ g.pin,  g.type, g.gpio, g.name as gname,
-                    #~ t.name as type_name
-        #~ FROM pi_prog p, pi_gpio g, pi_type t 
-        #~ WHERE p.gpio_id=g.gpio AND p.type_id=t.id AND  g.type LIKE "%IN/OUT%"
-        #~ ORDER BY p.id; """
     q = "SELECT * FROM pi_program;"
     #~ debug(q)
     return q
 
-#~ debug(dir(so))
-
 def setBoard(): #Setta l'indirizzo delle board
-    board = {}
-    q = "SELECT * FROM pi_board WHERE enable=1"
+    q = "SELECT id, address, board_type FROM pi_board"
     res = query(q) 
+    #~ debug(res)
+    P['board'] = {}
+    P['pcb'] = {}
     for r in res:
-        debug(r)
         if r['board_type'] == 1: #Board I2C
-            board[r['id']] = PCF8574(int(r['address']))
+            #~ P['board']['board_id'] = {'board' : PCF8574(int(r['board_address']))}
+            P['board'].update({r['id'] : r})
+            P['pcb'].update({r['id'] : PCF8574(int(r['address']))})
+            
         elif r['board_type'] == 2: #Board RS485
             pass
         else:
             pass
+    
+def setBoardIO():
+    q = "SELECT * FROM pi_board_io"
+    res = query(q) 
+    P['board_io'] = {}
+    for r in res:
+        P['board_io'].update({r['id'] : r})
+
+    q = "SELECT * FROM pi_board"
+    res = query(q) 
+    P['board'] = {}
+    for r in res:
+        P['board'].update({r['id'] : r})
+
+    q = "SELECT * FROM pi_type"
+    res = query(q) 
+    P['type'] = {}
+    for r in res:
+        P['type'].update({r['id'] : r})
+
+def getIO(io_id,all=0): #return IO status
+    #~ debug("%s  %s" %(io_id,P['board_io'][io_id]))
+    board_id =  P['board_io'][io_id]['board_id']
+    io_address = int(P['board_io'][io_id]['address'])
+    io = P['pcb'][board_id].portRead()
+    if board_id == 2:
+        #~ debug("In status (board_id, io_address, status): %s %s  %s" %(board_id, io_address, io))
+        pass
+    if all == 1:
+        return io
+    if io & M[io_address]:
+        return int(1)
+    else:
+        return int(0)
+
+def setProgram(): #Put into P dict all pi_program DB
+    q = "SELECT * FROM pi_program"
+    res = query(q)
+    P['program'] = {}
+    for r in res:
+        P['program'].update({r['id'] : r})        
+        #~ P['program'][r['id']].update({'OUT' : getIO(P['program'][r['id']]['out_id'])}) #Inizializza valore OUT
+        P['program'][r['id']].update({'OUT' : 0})
+        P['program'][r['id']].update({'IN_DELAY' : 0})
+        P['program'][r['id']].update({'OUT_DELAY' : 0})
         
-
-def setup():
-    setBoard() #Setta le schede
-    #~ so.portWrite(0)
-    #~ si.portWrite(0xff)
+             
+def setIO(io_id, OUT):
+    board_id =  P['board_io'][io_id]['board_id']
+    io_address = int(P['board_io'][io_id]['address'])
+    io_status = getIO(io_id,1)
     
-
-    """
-    cursor = query(portStatus()) #Richiesta dello stato dei PIN dal DB
-    for r in cursor:
-        
-        setIO(r['gpio'], r['in_out'])  # Setta GPIO come IN/OUT
-        
-        # Tipo: 1=on/off - 2=Timer - 3=Data - 4=Radiocomando
-        if r['type_id'] == 1 and r['in_out'] == 0:
-            debug('Settaggio GPIO %s nello stato %s ' % (r['gpio'], 'on/off'))
-            setState(r['gpio'], r['default_state'])
-
-        if r['type_id'] == 2 and r['in_out'] == 0:
-            debug('Settaggio GPIO %s nello stato %s ' % (r['gpio'], r['timer']))
-            TIMER[r['gpio']] = {'timer':int(r['timer']), 'start':0, 'count':int(r['timer'])}
-            
-
-        if r['type_id'] == 3 and r['in_out'] == 0:
-            debug('Settaggio GPIO %s nello stato %s ' % (r['gpio'],'Data'))
-
-        if r['type_id'] == 4:
-            debug('Settaggio GPIO %s nello stato %s ' % (r['gpio'], 'Radiocomando'))
-    """
-
-def loop():
-    cursor = query(portStatus()) #Richiesta dello stato dei PIN dal DB
-    
-    for r in cursor:
-        if r['type_id'] == 1: #On/OFF
-            debug(r)
-            
-            if r['in_id'] == r['in_inverted']:
-                pass
-            
-            pass
-        if r['type_id'] == 2: #Timer
-            #~ debug(r)
-            pass
-        if r['type_id'] == 3: #Chrono
-            #~ debug(r)
-            pass
-    
-    """
-
-    cursor = query(portStatus()) #Richiesta dello stato dei PIN dal DB    
-    for r in cursor:
-        #~ debug("%s    %s" %(r['default_state'], GPIO.digitalRead(eval(r['gpio']))))
-        if r['type_id'] < 3 and r['default_state'] == GPIO.digitalRead(eval(r['gpio'])):
-           
-            if(r['type_id'] == 2 and TIMER[r['gpio']]['start'] == 1):
-                TIMER[r['gpio']]['count'] = TIMER[r['gpio']]['timer']
-        
-        elif(r['type_id'] == 1):
-            #~ debug("Lo stato ON/OF del PIN %s è cambiato" %r['gpio']) 
-            continue
-        elif(r['type_id'] == 2):
-            TIMER[r['gpio']]['start'] = 1;
-            if TIMER[r['gpio']]['count'] == 0:
-                TIMER[r['gpio']]['start'] = 0
-                TIMER[r['gpio']]['count'] = TIMER[r['gpio']]['timer']
-                setState(r['gpio'], r['default_state'])
-            if TIMER[r['gpio']]['start'] == 1:
-                TIMER[r['gpio']]['count'] -= 1
-            
-        elif(r['type_id'] == 3):            
-            #~ debug("Lo stato CRONO del PIN %s è cambiato" %r['gpio']) 
-            crono = {}
-            ii = 0
-            
-            if r['crono'].find(';') > 0:
-                crono[r['gpio']] = r['crono'].split(';')
-                
-                n = "%s:%s" %(NOW().hour,NOW().minute)
-                
-                for res in crono[r['gpio']] :
-                    c = res.split('-')
-                    #~ debug(c)
-                    #~ debug('Start: %s  End: %s ' %(c[0],c[1]))
-                    if(n >= c[0] and n < c[1]):
-                        #~ debug('CAMBIATO')
-                        setState(r['gpio'], 1-int(r['default_state']))
-                        ii += 1
-                    
-                if (ii == 0):
-                    setState(r['gpio'], r['default_state'])
-    
-            
-        elif(r['type_id'] == 4):
-            debug("Lo stato RADIOCOMANDO del PIN %s è cambiato" %r['gpio']) 
-    """
-                
-    webiopi.sleep(10)
-
-
-def destroy():
-    so.portWrite(0)
-    si.portWrite(0xff)
-
-    # GPIO.digitalWrite(LIGHT, GPIO.LOW)
-
-    #~ logf('''\n\nChiusura programma''') 
-
-@webiopi.macro
-def getStatus(): #Ritorna lo stato dei pulsanti attivi
-    res = query(portStatus()) 
-    #~ debug(res)
-    return json.dumps(res)
-
-@webiopi.macro        
-def getSetupPort(gpio):
-    q="SELECT p.id, p.gpio_id, p.type_id, p.in_out, p.default_state, p.active, p.name, p.timer, p.crono FROM pi_program p, pi_gpio g WHERE p.gpio_id=g.gpio AND g.gpio=%s" %gpio 
-    #~ debug(q)
-    return json.dumps(query(q))
-
-
-@webiopi.macro    
-def setElements(gpio):
-    debug(gpio)
-    gpio = gpio[:-2]   
-    
-    st = gpio.split(';;')
-    q = "UPDATE pi_program SET "
-    id = ''
-    i = 0
-    
-    for r in st:    
-        
-        rr = r.split('::')
-        if rr[0] == 'id':
-            id = rr[1]
+    if OUT == 1:
+        #~ debug('A')
+        out = io_status | M[io_address] 
+        P['pcb'][board_id].portWrite(out)
+    elif OUT == 0:
+        if io_status & M[io_address] > 0:
+            #~ debug('B')
+            out = io_status ^ M[io_address] 
+            P['pcb'][board_id].portWrite(out)
         else:
-            q += rr[0]+"='%s' ," %rr[1]
-        i += 1
-    if q[-1] == ',':
-        q = q[:-1]
-    q += " WHERE id=%s" %id
-    debug("Setto lo stato del GPIO den DATABASE  %s" %q)
-    conn(q)
-    setup()
+            #~ debug('C')
+            out = '-'
+    #~ debug("OUT value (io_id, io_status, io_address, out_value, out):%s  %s  %s  %s  %s" %(io_address, io_status, m[io_address],  OUT, out))
     
-@webiopi.macro
-def addBt(): #Ritorna i GPIO che si possono aggiungere
-    #~ debug('addButton')
-    q = "SELECT gpio, id, name FROM pi_gpio WHERE  gpio <> '' AND active=1 AND gpio NOT IN ( SELECT gpio_id FROM pi_program )  ORDER BY 'CAST(name)'"
-    return json.dumps(query(q))
+def setup():
+    
+    setBoard() #Create board dict with all parameters
+    setBoardIO()
+    setProgram()
+    destroy() #azzera tutti i port
+    #~ destroy() #azzera tutti i port
+    
+def loop():
+    debug("*" * 100)
+    #~ debug(P)
+    for r in P['program']:
+        P['program'][r].update({'IN' : getIO(P['program'][r]['in_id'])}) 
+        #~ debug(P['program'][r])
+        #~ debug(P['program'][r]['IN_DELAY'] >= P['program'][r]['in_delay'])
+        
+        if P['program'][r]['type_id'] == 1: #=========>>>>>>>>>>> routine ON/OFF
+            in_inverted = 1 if P['program'][r]['in_inverted'] == 1 else 0 
+            out_inverted = 0 if P['program'][r]['out_inverted'] == 1 else 1
+            if P['program'][r]['IN'] == in_inverted:
+                P['program'][r].update({'OUT' : int(out_inverted)})
+            else:
+                P['program'][r].update({'OUT' : int(not out_inverted)})
+                P['program'][r]['IN_DELAY'] = 0
+            
 
-@webiopi.macro             
-def addGPIO(gpio): #Ritorna i GPIO che si possono aggiungere
-    gpio = gpio[:-2]   
-    #~ debug(gpio)
-    st = gpio.split(';;')
-    id = qk = qv = ''
-    i = 0
-    for r in st: 
-        rr = r.split('::')
-        qk += rr[0] + ", "
-        qv += "'" + rr[1] + "', "
-        i += 1
-    
-    qk = qk[:-2]
-    qv = qv[:-2]
-    #~ debug('%s   %s' %(qk, qv))
-    q = "INSERT INTO pi_program (" + qk + ") VALUES (" + qv + ");"
-    debug(q)    
-    conn(q)
-    setup()
-    
-@webiopi.macro             
-def getTimer():  
-    #~ debug(TIMER) 
-    return json.dumps(TIMER)
-    
+        setIO(P['program'][r]['out_id'], P['program'][r]['OUT'])
+    webiopi.sleep(1)
 
+
+def destroy(): #Setta gli I/O come out a zero
+    P = {}
+    q = "SELECT * FROM pi_board"
+    res =  query(q) 
+    for r in res:
+        #~ debug(r)
+        if r['board_type'] == 1:
+            P[r['id']] = PCF8574(int(r['address']))
+            
+    q = "SELECT board_id, io_type_id, address FROM pi_board_io  ORDER BY board_id, io_type_id"
+    res =  query(q) 
+    for r in res:
+        debug(r)
+        if r['io_type_id'] == 1:
+            P[r['board_id']].portWrite(0xff)
+        elif r['io_type_id'] == 2:
+            P[r['board_id']].portWrite(0)
     
 #~*************** INIZIO NUOVO DOMOCONTROL *******************
-
 @webiopi.macro             
 def setLogin(*args):
     #~ debug("%s  %s" %(args[0],args[1]))
@@ -332,10 +242,10 @@ def setUser(args):
     user_id = json.loads(args)
     q = "SELECT * FROM pi_user WHERE id = '%s'" %user_id
     user = query(q)
-    q = "SELECT * FROM pi_privileges"
-    privileges = query(q)
+    q = "SELECT * FROM pi_privilege"
+    privilege = query(q)
     
-    res = json.dumps([user,privileges]) 
+    res = json.dumps([user,privilege]) 
     #~ debug(res)
     return res 
 
@@ -395,17 +305,17 @@ def delAreaSave(*args):
     conn(q)
 
 @webiopi.macro             
-def setPrivileges(*args):
-    q = "SELECT * FROM pi_privileges"
+def setType(*args):
+    q = "SELECT * FROM pi_type"
     debug(q)
     res = query(q)
     debug(res)
-    return res 
+    return res
 
 @webiopi.macro 
-def setPrivilegesSave(*args):
+def setTypeSave(*args):
     #~ debug(args);
-    q = "UPDATE pi_privileges SET "
+    q = "UPDATE pi_type SET "
     i=0;
     for r in args:
         if r[0:3] == 'id=':
@@ -418,22 +328,58 @@ def setPrivilegesSave(*args):
     c = conn(q)
 
 @webiopi.macro 
-def setPrivilegesAdd(*args):
-    q = "INSERT INTO pi_privileges (name,description) VALUES ('name','description');"
+def setTypeAdd(*args):
+    q = "INSERT INTO pi_type (name,description) VALUES ('name','description');"
     debug(q)
     conn(q)
 
 @webiopi.macro 
-def delPrivilegesSave(*args):
-    q = "DELETE FROM pi_privileges WHERE id="+args[0]
+def delTypeSave(*args):
+    q = "DELETE FROM pi_type WHERE id="+args[0]
     debug(q)
     conn(q)
-#~End Privileges 
+#~End Type
+
+@webiopi.macro             
+def setPrivilege(*args):
+    q = "SELECT * FROM pi_privilege"
+    debug(q)
+    res = query(q)
+    debug(res)
+    return res 
+
+@webiopi.macro 
+def setPrivilegeSave(*args):
+    #~ debug(args);
+    q = "UPDATE pi_privilege SET "
+    i=0;
+    for r in args:
+        if r[0:3] == 'id=':
+            ids=r[3:]
+        else:
+            q += r[0:r.find('=')] + "='" + r[r.find('=')+1:] + "',"
+    q = q[:-1]
+    q += " WHERE id=%s" % ids
+    debug(q)
+    c = conn(q)
+
+@webiopi.macro 
+def setPrivilegeAdd(*args):
+    q = "INSERT INTO pi_privilege (name,description) VALUES ('name','description');"
+    debug(q)
+    conn(q)
+
+@webiopi.macro 
+def delPrivilegeSave(*args):
+    q = "DELETE FROM pi_privilege WHERE id="+args[0]
+    debug(q)
+    conn(q)
+#~End Privilege
 
 #INPUT setup
 @webiopi.macro             
 def setInputSetup(*args):
-    q = "SELECT * FROM pi_io"
+    q = "SELECT * FROM pi_io_type"
     debug(q)
     res = query(q)
     debug(res)
@@ -442,7 +388,7 @@ def setInputSetup(*args):
 @webiopi.macro 
 def setInputSetupSave(*args):
     #~ debug(args);
-    q = "UPDATE pi_io SET "
+    q = "UPDATE pi_io_type SET "
     i=0;
     for r in args:
         if r[0:3] == 'id=':
@@ -456,13 +402,13 @@ def setInputSetupSave(*args):
 
 @webiopi.macro 
 def setInputSetupAdd(*args):
-    q = "INSERT INTO pi_io (name,description) VALUES ('name','description');"
+    q = "INSERT INTO pi_io_type (name,description) VALUES ('name','description');"
     debug(q)
     conn(q)
 
 @webiopi.macro 
 def delInputSetupSave(*args):
-    q = "DELETE FROM pi_io WHERE id="+args[0]
+    q = "DELETE FROM pi_io_type WHERE id="+args[0]
     debug(q)
     conn(q)
 #~End IO setup
@@ -506,7 +452,7 @@ def setBoardIOSetup():
     q = "SELECT b.id bid, b.name bname, b.description bdescription, b.enable benable, i.* FROM pi_board_io AS i LEFT JOIN pi_board AS b ON (b.id=i.board_id) ORDER BY b.id, id;"
     #~ debug(q)
     res['board_io'] = query(q)
-    q = "SELECT * FROM pi_io;"
+    q = "SELECT * FROM pi_io_type;"
     res['io'] = query(q) 
     q = "SELECT * FROM pi_board;"
     res['board'] = query(q) 
@@ -530,7 +476,7 @@ def saveBoardIOSetup(*args):
 
 @webiopi.macro
 def addBoardIOSetup():
-    q = "INSERT INTO pi_board_io (io_id, name,description,board_id) VALUES ('1','name','description', '1');"
+    q = "INSERT INTO pi_board_io (io_type_id, name,description,board_id) VALUES ('1','name','description', '1');"
     #~ debug(q)
     conn(q)
 
@@ -553,9 +499,9 @@ def getProgramSetup(*args):
     res = {}
     q = "SELECT * FROM pi_program WHERE id="+args[0]
     res['program'] = query(q)
-    q = "SELECT i.name ioname, bi.*, b.name bname, b.description bdescription FROM pi_board_io bi, pi_io i, pi_board b WHERE bi.io_id=i.id AND bi.board_id=b.id AND i.name='in';"
+    q = "SELECT i.name ioname, bi.*, b.name bname, b.description bdescription FROM pi_board_io bi, pi_io_type i, pi_board b WHERE bi.io_type_id=i.id AND bi.board_id=b.id AND i.name='in';"
     res['in'] = query(q)
-    q = "SELECT i.name ioname, bi.*, b.name bname, b.description bdescription FROM pi_board_io bi, pi_io i, pi_board b WHERE bi.io_id=i.id AND bi.board_id=b.id AND i.name='out';"
+    q = "SELECT i.name ioname, bi.*, b.name bname, b.description bdescription FROM pi_board_io bi, pi_io_type i, pi_board b WHERE bi.io_type_id=i.id AND bi.board_id=b.id AND i.name='out';"
     res['out'] = query(q)
     q = "SELECT * FROM pi_type;"
     res['type'] = query(q)
@@ -567,6 +513,7 @@ def deleteProgramSetup(*args):
     q = "DELETE FROM pi_program WHERE id="+args[0]
     debug(q)
     conn(q)
+    setReloadStatus()
 
 @webiopi.macro
 def addProgramSetup():
@@ -587,20 +534,26 @@ def saveProgramSetup(*args):
     q += " WHERE id=%s" % ids
     debug(q)
     c = conn(q)
+    setReloadStatus()
 
 @webiopi.macro 
 def getMenuStatus(*args):
-    res = {}
-    q = """SELECT * FROM pi_program """
-    res['program'] = query(q)
-    q = """SELECT * FROM pi_board_io """
-    res['board_io'] = query(q)
-    q = """SELECT * FROM pi_board """
-    res['board'] = query(q)
-    q = """SELECT * FROM pi_type """
-    res['type'] = query(q)
+    R = {}
+    R.update(P)
+    del R['pcb']
+    if Q != R:
+        Q.update(P)
+        del Q['pcb']
+        return json.dumps(Q)
+    else:
+        Q.update(P)
+        del Q['pcb']
+        return json.dumps(Q)
+    #~ debug(Q)
     
-    debug(res)
+@webiopi.macro 
+def setReloadStatus():
+    setup()
 
 def url(t):
     debug(urllib.parse.unquote(t))

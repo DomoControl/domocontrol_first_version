@@ -16,6 +16,18 @@ body, html {
 .but {text-align:center;}
 .but input {height: 2em; font-size: 1.5em;}
 
+.status {
+    border: 1px dotted gray;
+    margin: 5px;
+    padding: 5px;
+}
+.title {
+    font-weight: bold;
+    text-align:center;
+    background-color: green;
+    color: white;
+    margin-top: 0;
+}
 
 #footer {
     width: auto;
@@ -143,4 +155,7 @@ table.f-h > tbody > th:first-child {width: 100px; background-color: red;}
     background-color:lightyellow;
     margin:5px;
     padding: 5px;
+}
+td {
+    text-align:center;
 }

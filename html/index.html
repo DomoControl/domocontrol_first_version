@@ -20,6 +20,8 @@
         });
         // Fine main ciclo
             
+            var Interval = null; 
+            
             //Funzione che trasforma i cookie in array
             function getCookies() {
                 var cookies = { }; 
@@ -47,6 +49,7 @@
                 if(typeof(page) == 'undefined' ) {document.cookie='page=""';} //init if page is not set
                 //~ alert(document.cookie);
                 logt(page); //Send LOG
+                if (page != 'menuStatus'){stopInterval();}    
                 switch(page) {
                     case 'login':
                         title = '<small>Login</small>'
@@ -64,7 +67,8 @@
                         f +=    '</form>';
                         $("#form").html(f);
                         break;
-                    case 'menu':    
+                    case 'menu':
+                        
                         title = '<small>Menu</small>'
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';   
@@ -79,9 +83,10 @@
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                         $("#form").html( '<p class="but"><input type="button" name="setup" value="User Setup" onclick="document.cookie=\'page=userSetup\';getPage(1)" ></p>' +
                             '<p class="but"><input type="button" name="setup" value="Area Setup" onclick="document.cookie=\'page=areaSetup\';getPage(1)" ></p>' +
-                            '<p class="but"><input type="button" name="setup" value="Group Privileges" onclick="document.cookie=\'page=groupPrivileges\';getPage(1)" ></p>' +
+                            '<p class="but"><input type="button" name="setup" value="Group Privilege" onclick="document.cookie=\'page=privilegeSetup\';getPage(1)" ></p>' +
                             '<p class="but"><input type="button" name="setup" value="Board Setup" onclick="document.cookie=\'page=boardSetup\';getPage(1)" ></p>' +
                             '<p class="but"><input type="button" name="setup" value="Input Setup" onclick="document.cookie=\'page=inputSetup\';getPage(1)" ></p>' +
+                            '<p class="but"><input type="button" name="setup" value="Type Setup" onclick="document.cookie=\'page=typeSetup\';getPage(1)" ></p>' +
                             '<p class="but"><input type="button" name="setup" value="Program Setup" onclick="document.cookie=\'page=programSetup\';getPage(1)" ></p>' +
                             '<p class="but"><input type="button" name="setup" value="Email - SMS Setup" onclick="document.cookie=\'page=email-smsSetup\';getPage(1)" ></p>' );
                         $("#form1").html('');
@@ -105,12 +110,12 @@
                         $("#form").html('');
                         $("#form1").html('');
                         break;       
-                    case 'groupPrivileges':
+                    case 'privilegeSetup':
                         title = '<small>Group Privileges</small>';
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                         footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage(1)" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
-                        webiopi().callMacro("setPrivileges", '' , setPrivileges);
+                        webiopi().callMacro("setPrivilege", '' , setPrivilege);
                         $("#form").html('');
                         $("#form1").html('');
                         break;   
@@ -150,6 +155,15 @@
                         $("#form").html('');
                         $("#form1").html('');
                         break;
+                    case 'typeSetup':
+                        title = '<small>Type Function Setup</small>';
+                        footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
+                        footer += '<input type="button" name="setup" value="Menu Setup" onclick="document.cookie=\'page=menuSetup\';getPage(1)" >';
+                        footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
+                        webiopi().callMacro("setType", '' , setType);
+                        $("#form").html('');
+                        $("#form1").html('');
+                        break;
                     case 'programSetup':
                         title = '<small>Program Setup</small>';
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
@@ -169,9 +183,10 @@
                     case 'menuStatus':
                         title = '<small>Status</small>';
                         footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
-                        footer += '<input type="button" name="setup" value="Menu" onclick="document.cookie=\'page=menu\';getPage(1)" >';
+                        footer += '<input type="button" name="setup" value="Menu" onclick="document.cookie=\'page=menu\'; getPage(1)" >';
                         footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
-                        webiopi().callMacro("getMenuStatus", '', getMenuStatus);
+                        startStatus();
+                        
                         $("#form").html('')
                         $("#form1").html('');
                         break;
@@ -181,17 +196,46 @@
                 
                 $("#title").html('<h1>DomoControl - ' + title + '</h1>');
                 $("#footer").html(footer);
-                return
+                return;
             }
             
-            function getMenuStatus(){
-                document.cookie = "page = menuStatus;";
-                webiopi().callMacro("menuStatus", '', setMenuStatus);
-                
+            function startStatus(){
+                Interval = setInterval(function(){
+                    webiopi().callMacro("getMenuStatus", '', getMenuStatus);
+                },1000);
             }
             
-            function setMenuStatus(){
-                
+            function stopInterval(){
+                clearInterval(Interval);
+                interval=null;
+            }
+            //~ function menuStatus(){
+                //~ 
+            //~ }
+            
+            var getMenuStatus = function (macro, args, response) {
+                    var res = $.parseJSON(response);
+                                        
+                    if (res['equal'] != 'equal'){}
+                    
+                    var f = "<div>";
+                        f += "<div class='title'><p width='100%' align='center'><span style='width:20%; display:inline-block;' >Input</span><span style='width:20%; display:inline-block;' >Inverted</span><span style='width:20%; display:inline-block;' >Delay</span><span style='width:20%; display:inline-block;' >Output</span></p></div>";
+                    for(r in res['program']){
+                        
+                        f += "<div class='status'><p class='title'>"+res['program'][r]['description']+"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "+res['type'][res['program'][r]['type_id']]['name']+"</p>";
+                        if(res['program'][r]['IN'] == 1){var in_image = 'in_off.png'}else{var in_image = 'in_on.png'}
+                        f += "<p width='100%' align='center'><span style='width:20%; display:inline-block;'><input type='image' src='./images/"+in_image+"' width='100px' name='IN' value='"+res['program'][r]['IN']+"' /></span>";
+                        if(res['program'][r]['in_inverted'] == 1){var check = 'checked';} else {var check = '';}
+                        f += "<span style='width:20%; display:inline-block;'><input type='checkbox' name='in_inverted' "+check+" /></span>";
+                        f += "<span style='width:20%; display:inline-block;'>"+res['program'][r]['in_delay']+"</span>";
+                        if(res['program'][r]['OUT'] == 1){var out_image = 'out_on.png'}else{var out_image = 'out_off.png'}
+                        f += "<span style='width:20%; display:inline-block;'><input type='image' src='./images/"+out_image+"' width='60px' name='OUT' value='"+res['program'][r]['OUT']+"' /></span>";
+                        f += "<span style='width:20%; display:inline-block;'><input type='button' value='Edit' onclick='document.cookie=\"page=programSetup\";getPage(1)' /></span>";
+                        f += "</p></div>";
+                    }
+                    f += "</div>";
+                    $("#form").html(f); 
+                //~ }
             }
             
             //verifica se le credenziali sono corrette
@@ -254,19 +298,19 @@
                 f +=            '<p><label class="field" for="Name">Name</label><input type="text" name="name" value="'+ res[0][0]['name'] +'" class="textbox-300" ></p>';
                 f +=            '<p><label class="field" for="Surname">Surname</label><input type="text" name="surname" value="'+ res[0][0]['surname'] +'" class="textbox-300" ></p>';
                                 res[0][0]['active'] ? checked='checked="checked"' : checked=''; 
-                //Checkbox privileges
+                //Checkbox privilege
                 var c = ''; var checked
                 for(var k in res[1]) {
                     
                     checked = '';
-                    var pp = []; pp = res[0][0]['privileges'].split(';');
+                    var pp = []; pp = res[0][0]['privilege'].split(';');
                     for (var priv in pp) {
                         //~ $("#message").append(res[1][k]['id'] + ' - ' + pp[priv] +'<br>');
                         if (res[1][k]['id'] == pp[priv]) {
                             checked = 'checked="checked"';
                         }
                     }
-                    f += '<p><label class="field" for="'+res[1][k]['name']+'">'+res[1][k]['name']+' </label><input type="checkbox" id="privileges" name="privileges[]" value="'+res[1][k]['id']+'" '+ checked +' class="textbox-300" /></p>';
+                    f += '<p><label class="field" for="'+res[1][k]['name']+'">'+res[1][k]['name']+' </label><input type="checkbox" id="privilege" name="privilege[]" value="'+res[1][k]['id']+'" '+ checked +' class="textbox-300" /></p>';
                 }
                 //end checkbox
                 f +=            '<p><label class="field" for="Valida">&nbsp;</label><input id="valida" type="button" name="valida" value="Save" onclick=setUserSave();  class="textbox-300"></p>';
@@ -290,7 +334,7 @@
                 r += ',name='+$('#setUserForm').find('input[name="name"]').val();
                 r += ',surname='+$('#setUserForm').find('input[name="surname"]').val();
                 
-                var p = ',privileges=';
+                var p = ',privilege=';
                 var k = 0;
                 $('#setUserForm').find('input[type="checkbox"]:checked').each ( function() {
                     if(k > 0) {p += ';';}
@@ -358,25 +402,25 @@
             }
             //Fine pagina setupArea
 
-            //Pagine setupPrivileges
-            var setPrivileges = function (macro, args, response) {
+            //Pagine setupPrivilege
+            var setPrivilege = function (macro, args, response) {
                 res = eval(response);
-                var f = '<form name="setPrivilegesForm" id="setPrivilegesForm">';
+                var f = '<form name="setPrivilegeForm" id="setPrivilegeForm">';
                 f +=    '<div class="fieldSet">';
                 f +=        '<fieldset>';
-                f +=            '<legend>Form Privileges</legend>';
-                f +=            '<table class="f-h" align=center><tr><th>ID</th><th>Name</th><th>Description</th><th></th></tr>';
+                f +=            '<legend>Form Privilege</legend>';
+                f +=            '<table class="f-h" align=center><tr><th>Name</th><th>Description</th><th>Save</th><th></th></tr>';
                 for (r in res) {
                     //~ $("#text").html(r + ' - ' + res[r]['name'] + '<br>'); 
                     f += '<input type="hidden" name="id['+ res[r]['id'] +']" value="'+ res[r]['id'] +'" />';
-                    f += '<td><input type="text" name="name['+ res[r]['id'] +']" value="'+ res[r]['name'] +'" readonly /></td>';
-                    f += '<td><input type="text" name="description['+ res[r]['id'] +']" value="'+ res[r]['description'] +'"  /></td>';
-                    f += '<td><input type="button" id="valida" name="valida" value="Save" onclick=setPrivilegesSave('+res[r]["id"]+'); /> ';
-                    //~ f += '<input type="button" id="delete" name="delete" value="Delete" onclick=delPrivilegesSave('+res[r]["id"]+'); /> ';
+                    f += '<td><input type="text" name="name['+ res[r]['id'] +']" value="'+ d(res[r]['name']) +'" readonly /></td>';
+                    f += '<td><input type="text" name="description['+ res[r]['id'] +']" value="'+ d(res[r]['description']) +'"  /></td>';
+                    f += '<td><input type="button" id="valida" name="valida" value="Save" onclick=setPrivilegeSave('+res[r]["id"]+'); /> ';
+                    //~ f += '<input type="button" id="delete" name="delete" value="Delete" onclick=delPrivilegeSave('+res[r]["id"]+'); /> ';
                     
                     f += '</td></tr>';
                 }
-                f += '<tr><td colspan=3><input type="button" id="add" name="add" value="Add" onclick=setPrivilegesAdd(); /></td></tr> ';                
+                f += '<tr><td colspan=3><input type="button" id="add" name="add" value="Add" onclick=setPrivilegeAdd(); /></td></tr> ';                
                 f +=        '</table>';
                 f +=        '</fieldset>';
                 f +=    '</div>';
@@ -385,32 +429,31 @@
                 $("#form").html(f);
             }
 
-            function setPrivilegesSave(x) {
-                alert(document.cookie);
+            function setPrivilegeSave(x) {
+                //~ alert(document.cookie);
+                document.cookie = "page=privilegeSetup";
                 var r = '';
-                r += 'id='+$('#setPrivilegesForm').find('input[name="id['+x+']"]').val();
-                r += ',name='+$('#setPrivilegesForm').find('input[name="name['+x+']"]').val();
-                r += ',description='+$('#setPrivilegesForm').find('input[name="description['+x+']"]').val();
-                webiopi().callMacro("setPrivilegesSave", [r] , setPrivilegesSave1);
+                r += 'id='+$('#setPrivilegeForm').find('input[name="id['+x+']"]').val();
+                r += ',name='+$('#setPrivilegeForm').find('input[name="name['+x+']"]').val();
+                r += ',description='+$('#setPrivilegeForm').find('input[name="description['+x+']"]').val();
+                webiopi().callMacro("setPrivilegeSave", [r] , setPrivilegeSave1);
             }
             
-            function setPrivilegesSave1() {
-                document.cookie = "page=privilegesSetup";
+            function setPrivilegeSave1() {
                 getPage(1);
             }
             
-            function delPrivilegesSave(x) {
-                webiopi().callMacro("delPrivilegesSave", [x] );
-                document.cookie = "page=privilegesSetup";
+            function delPrivilegeSave(x) {
+                webiopi().callMacro("delPrivilegeSave", [x] );
                 getPage(1);
             }
             
-            function setPrivilegesAdd(){
-                webiopi().callMacro("setPrivilegesAdd",  '' );
-                document.cookie = "page=privilegesSetup";
+            function setPrivilegeAdd(){
+                webiopi().callMacro("setPrivilegeAdd",  '' );
+                document.cookie = "page=privilegeSetup";
                 getPage(1);
             }
-            //Fine pagina Privileges
+            //Fine pagina Privilege
 
             //Pagina inputSetup
             var setInputSetup = function (macro, args, response) {
@@ -419,14 +462,14 @@
                 f +=    '<div class="fieldSet">';
                 f +=        '<fieldset>';
                 f +=            '<legend>Form Input Setup</legend>';
-                f +=            '<table class="f-h" align=center><tr><th>ID</th><th>Name</th><th>Description</th><th></th></tr>';
+                f +=            '<table class="f-h" align=center><tr><th>Name</th><th>Description</th><th>Save</th><th></th></tr>';
                 for (r in res) {
                     //~ $("#text").html(r + ' - ' + res[r]['name'] + '<br>'); 
                     f += '<input type="hidden" name="id['+ res[r]['id'] +']" value="'+ res[r]['id'] +'" />';
-                    f += '<td><input type="text" name="name['+ res[r]['id'] +']" value="'+ res[r]['name'] +'" readonly /></td>';
-                    f += '<td><input type="text" name="description['+ res[r]['id'] +']" value="'+ res[r]['description'] +'"  /></td>';
+                    f += '<td><input size="1" type="text" name="name['+ res[r]['id'] +']" value="'+ res[r]['name'] +'" readonly /></td>';
+                    f += '<td><input size="30" type="text" name="description['+ res[r]['id'] +']" value="'+ res[r]['description'] +'"  /></td>';
                     f += '<td><input type="button" id="valida" name="valida" value="Save" onclick=setInputSetupSave('+res[r]["id"]+'); /> ';
-                    //~ f += '<input type="button" id="delete" name="delete" value="Delete" onclick=delPrivilegesSave('+res[r]["id"]+'); /> ';
+                    //~ f += '<input type="button" id="delete" name="delete" value="Delete" onclick=delPrivilegeSave('+res[r]["id"]+'); /> ';
                     
                     f += '</td></tr>';
                 }
@@ -445,7 +488,8 @@
                 r += 'id='+$('#setInputSetupForm').find('input[name="id['+x+']"]').val();
                 r += ',name='+$('#setInputSetupForm').find('input[name="name['+x+']"]').val();
                 r += ',description='+$('#setInputSetupForm').find('input[name="description['+x+']"]').val();
-                webiopi().callMacro("setInputSetupSave", [r] , setIOSave1);
+                webiopi().callMacro("setInputSetupSave", [r] );
+                getPage(1)
             }
             
             function setInputSetupSave1() {
@@ -465,6 +509,61 @@
                 getPage(1);
             }
             //Fine pagina inputSetup
+
+            //Pagine Type Function
+            var setType = function (macro, args, response) {
+                
+                res = eval(response);
+                var f = '<form name="setTypeForm" id="setTypeForm">';
+                f +=    '<div class="fieldSet">';
+                f +=        '<fieldset>';
+                f +=            '<legend>Form Type Function</legend>';
+                f +=            '<table class="f-h" align=center><tr><th>Name</th><th>Description</th><th>Save</th><th></th></tr>';
+                for (r in res) {
+                    //~ $("#text").html(r + ' - ' + res[r]['name'] + '<br>'); 
+                    f += '<input type="hidden" name="id['+ res[r]['id'] +']" value="'+ res[r]['id'] +'" />';
+                    f += '<td><input type="text" name="name['+ res[r]['id'] +']" value="'+ d(res[r]['name']) +'" readonly /></td>';
+                    f += '<td><input type="text" name="description['+ res[r]['id'] +']" value="'+ d(res[r]['description']) +'"  /></td>';
+                    f += '<td><input type="button" id="valida" name="valida" value="Save" onclick=setTypeSave('+res[r]["id"]+'); /> ';
+                    //~ f += '<input type="button" id="delete" name="delete" value="Delete" onclick=delTypeSave('+res[r]["id"]+'); /> ';
+                    
+                    f += '</td></tr>';
+                }
+                f += '<tr><td colspan=3><input type="button" id="add" name="add" value="Add" onclick=setTypeAdd(); /></td></tr> ';                
+                f +=        '</table>';
+                f +=        '</fieldset>';
+                f +=    '</div>';
+                f += '</form>'; 
+                //~ alert(f);
+                $("#form").html(f);
+            }
+
+            function setTypeSave(x) {
+                //~ alert(document.cookie);
+                var r = '';
+                r += 'id='+$('#setTypeForm').find('input[name="id['+x+']"]').val();
+                r += ',name='+$('#setTypeForm').find('input[name="name['+x+']"]').val();
+                r += ',description='+$('#setTypeForm').find('input[name="description['+x+']"]').val();
+                webiopi().callMacro("setTypeSave", [r] , setTypeSave1);
+            }
+            
+            function setTypeSave1() {
+                document.cookie = "page=typeSetup";
+                getPage(1);
+            }
+            
+            function delTypeSave(x) {
+                webiopi().callMacro("delTypeSave", [x] );
+                document.cookie = "page=typeSetup";
+                getPage(1);
+            }
+            
+            function setTypeAdd(){
+                webiopi().callMacro("setTypeAdd",  '' );
+                document.cookie = "page=typeSetup";
+                getPage(1);
+            }
+            //Fine pagina Type Function
 
             //Begin Board Setup
             var setBoardSetup = function (macro, args, response) {
@@ -550,12 +649,12 @@
                     }
                     f += '</select>';
                     
-                    f += '<select id="io_id" name="io_id" title="Select Input Type" >';
+                    f += '<select id="io_type_id" name="io_type_id" title="Select Input Type" >';
                     var sel = '';
                     for(io in res['io']) {
                         
                         var selected = '';
-                        if( res['board_io'][r]['io_id'] == res['io'][io]['id'] ){selected='selected=selected';}
+                        if( res['board_io'][r]['io_type_id'] == res['io'][io]['id'] ){selected='selected=selected';}
                         f += '<option value="'+res['io'][io]['id']+'" '+selected+' >'+ res['io'][io]['name'] +'</option>';
                     }
                     f += '</select>';
@@ -581,7 +680,7 @@
                 var r = '';
                 r += 'id='+$('#boardIOForm'+id).find('input[name="id"]').val();
                 r += ',board_id='+$('#boardIOForm'+id).find('select[name="board_id"]').val() ;
-                r += ',io_id='+$('#boardIOForm'+id).find('select[name="io_id"]').val() ;
+                r += ',io_type_id='+$('#boardIOForm'+id).find('select[name="io_type_id"]').val() ;
                 r += ',name='+$('#boardIOForm'+id).find('input[name="name"]').val();
                 r += ',description='+$('#boardIOForm'+id).find('input[name="description"]').val();
                 r += ',address='+$('#boardIOForm'+id).find('input[name="address"]').val();
@@ -787,7 +886,7 @@
             function e(str) {return encodeURI(str); }
             
             //Decode characters
-            function d(str) {return decodeURI(str);}
+            function d(str) {return decodeURIComponent(str);}
             
             //~ multipleValues.join( ", " )
     </script> 
