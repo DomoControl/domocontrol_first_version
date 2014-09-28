@@ -94,7 +94,7 @@ def portStatus():
     return q
 
 def setBoard(): #Setta l'indirizzo delle board
-    q = "SELECT id, address, board_type FROM pi_board"
+    q = "SELECT id, address, board_type FROM pi_board WHERE address > 0 "
     res = query(q) 
     #~ debug(res)
     P['board'] = {}
@@ -207,7 +207,7 @@ def loop():
 
 def destroy(): #Setta gli I/O come out a zero
     P = {}
-    q = "SELECT * FROM pi_board"
+    q = "SELECT * FROM pi_board WHERE address > 0"
     res =  query(q) 
     for r in res:
         #~ debug(r)
@@ -258,9 +258,9 @@ def setUserSave(*args):
             ids=r[3:]
         else:
             q += r[0:r.find('=')] + "='" + r[r.find('=')+1:] + "',"
-    q = q[:-1]
+    q += "timestamp='%s'" %NOW()
     q += " WHERE id=%s" % ids
-    #~ debug(q)
+    debug(q)
     c = conn(q)
     #~ debug("query aggiornate: %s   " %c)
 
@@ -288,7 +288,7 @@ def setAreaSave(*args):
             ids=r[3:]
         else:
             q += r[0:r.find('=')] + "='" + r[r.find('=')+1:] + "',"
-    q = q[:-1]
+    q += "timestamp='%s'" %NOW()
     q += " WHERE id=%s" % ids
     #~ debug(q)
     c = conn(q)
@@ -322,7 +322,7 @@ def setTypeSave(*args):
             ids=r[3:]
         else:
             q += r[0:r.find('=')] + "='" + r[r.find('=')+1:] + "',"
-    q = q[:-1]
+    q += "timestamp='%s'" %NOW()
     q += " WHERE id=%s" % ids
     debug(q)
     c = conn(q)
@@ -358,7 +358,7 @@ def setPrivilegeSave(*args):
             ids=r[3:]
         else:
             q += r[0:r.find('=')] + "='" + r[r.find('=')+1:] + "',"
-    q = q[:-1]
+    q += "timestamp='%s'" %NOW()
     q += " WHERE id=%s" % ids
     debug(q)
     c = conn(q)
@@ -395,7 +395,7 @@ def setInputSetupSave(*args):
             ids=r[3:]
         else:
             q += r[0:r.find('=')] + "='" + r[r.find('=')+1:] + "',"
-    q = q[:-1]
+    q += "timestamp='%s'" %NOW()
     q += " WHERE id=%s" % ids
     debug(q)
     c = conn(q)
@@ -431,7 +431,7 @@ def setBoardSetupSave(*args):
             ids=r[3:]
         else:
             q += r[0:r.find('=')] + "='" + r[r.find('=')+1:] + "',"
-    q = q[:-1]
+    q += "timestamp='%s'" %NOW()
     q += " WHERE id=%s" % ids
     debug(q)
     c = conn(q)
@@ -447,10 +447,10 @@ def addBoardSetup():
 
 #~ Edit IO
 @webiopi.macro             
-def setBoardIOSetup():
+def setBoardIOSetup(id):
     res = {}
-    q = "SELECT b.id bid, b.name bname, b.description bdescription, b.enable benable, i.* FROM pi_board_io AS i LEFT JOIN pi_board AS b ON (b.id=i.board_id) ORDER BY b.id, id;"
-    #~ debug(q)
+    q = "SELECT b.id bid, b.name bname, b.description bdescription, b.enable benable, i.* FROM pi_board_io AS i LEFT JOIN pi_board AS b ON (b.id=i.board_id) WHERE b.id="+id+" ORDER BY b.id, id;"
+    debug(q)
     res['board_io'] = query(q)
     q = "SELECT * FROM pi_io_type;"
     res['io'] = query(q) 
@@ -469,15 +469,15 @@ def saveBoardIOSetup(*args):
             ids=r[3:]
         else:
             q += r[0:r.find('=')] + "='" + r[r.find('=')+1:] + "',"
-    q = q[:-1]
+    q += "timestamp='%s'" %NOW()
     q += " WHERE id=%s" % ids
     #~ debug(q)
     c = conn(q)
 
 @webiopi.macro
-def addBoardIOSetup():
-    q = "INSERT INTO pi_board_io (io_type_id, name,description,board_id) VALUES ('1','name','description', '1');"
-    #~ debug(q)
+def addBoardIOSetup(id):
+    q = "INSERT INTO pi_board_io (io_type_id, name,description,board_id) VALUES ('1','name','description', "+id+");"
+    debug(q)
     conn(q)
 
 @webiopi.macro
@@ -530,7 +530,7 @@ def saveProgramSetup(*args):
             ids=r[3:]
         else:
             q += r[0:r.find('=')] + "='" + r[r.find('=')+1:] + "',"
-    q = q[:-1]
+    q += "timestamp='%s'" %NOW()
     q += " WHERE id=%s" % ids
     debug(q)
     c = conn(q)

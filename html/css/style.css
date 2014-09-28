@@ -1,5 +1,5 @@
 body, html {
-    background:#6DFF9D;
+    background:#93AAC4;
     height: 100%;
     font-family: Arial;
     margin: 10px 0px 0px 0px;
@@ -8,10 +8,29 @@ body, html {
 #container { 
     width: 500px;
     height: auto;
-    background: #25FF00;
+    background: #DAE1E8;
     margin: 0 auto;
 }
 
+h1 {background: #2952D8; color:white;}
+
+#footer {
+    width: auto;
+    background: #2952D8;
+    color: white;
+    text-align:center;
+    margin-top: 20px;
+    padding: 5px;
+}
+#footer input {font-size:20px;}
+
+#title{
+    text-align:center;
+    font-weight:bold;
+    background:#9FB2C9;
+}
+
+.status {margin-top:0;}
 
 .but {text-align:center;}
 .but input {height: 2em; font-size: 1.5em;}
@@ -21,28 +40,20 @@ body, html {
     margin: 5px;
     padding: 5px;
 }
+
+/*
 .title {
     font-weight: bold;
     text-align:center;
-    background-color: green;
+    background-color: #2952D8;
     color: white;
     margin-top: 0;
 }
+*/
 
-#footer {
-    width: auto;
-    border: 2px solid black;
-    background: yellow;
-    text-align:center;
-    margin-top: 20px;
-    padding: 5px;
-}
-#footer input {font-size:20px;}
+
     
-.title{
-    text-align:center;
-    font-weight:bold;
-}
+
 
 .id {
     float:left;
@@ -113,7 +124,7 @@ legend {
 }
 label.field {
     text-align: right;
-    width: 150px;
+    width: 200px;
     float: left;
     font-weight: bold;
     margin-right: 10px;
@@ -132,6 +143,15 @@ label span, .required {
     color: red;
     font-weight: bold;
 }
+
+col-l label {
+    width: 200px;
+    display:inline-block;
+}
+col-r label {
+    width: 200px;
+    display:inline-block;
+}
 /* END form */
 
 /* form horizontal*/
@@ -147,15 +167,7 @@ label span, .required {
     border: 1 px ;
     text-align :center;
 }
-/*
-table.f-h > tbody > th:first-child {width: 100px; background-color: red;}
-*/
-.form {
-    border: 1px dashed gray;
-    background-color:lightyellow;
-    margin:5px;
-    padding: 5px;
-}
-td {
+
+td, th {
     text-align:center;
 }
