@@ -88,10 +88,10 @@ def query(q): #return list with dictionary
     cur.execute(q)
     return cur.fetchall()
     
-def portStatus():
-    q = "SELECT * FROM pi_program;"
+#~ def portStatus():
+    #~ q = "SELECT * FROM pi_program;"
     #~ debug(q)
-    return q
+    #~ return q
 
 def setBoard(): #Setta l'indirizzo delle board
     q = "SELECT id, address, board_type FROM pi_board WHERE address > 0 "
@@ -199,7 +199,15 @@ def loop():
             else:
                 P['program'][r].update({'OUT' : int(not out_inverted)})
                 P['program'][r]['IN_DELAY'] = 0
-            
+        
+        if P['program'][r]['type_id'] == 4: #=========>>>>>>>>>>> Manual (switch by web)
+            in_inverted = 1 if P['program'][r]['in_inverted'] == 1 else 0 
+            out_inverted = 0 if P['program'][r]['out_inverted'] == 1 else 1
+            if P['program'][r]['IN'] == in_inverted:
+                P['program'][r].update({'OUT' : int(out_inverted)})
+            else:
+                P['program'][r].update({'OUT' : int(not out_inverted)})
+                P['program'][r]['IN_DELAY'] = 0
 
         setIO(P['program'][r]['out_id'], P['program'][r]['OUT'])
     webiopi.sleep(1)
@@ -214,14 +222,15 @@ def destroy(): #Setta gli I/O come out a zero
         if r['board_type'] == 1:
             P[r['id']] = PCF8574(int(r['address']))
             
-    q = "SELECT board_id, io_type_id, address FROM pi_board_io  ORDER BY board_id, io_type_id"
-    res =  query(q) 
-    for r in res:
-        debug(r)
-        if r['io_type_id'] == 1:
-            P[r['board_id']].portWrite(0xff)
-        elif r['io_type_id'] == 2:
-            P[r['board_id']].portWrite(0)
+            q = "SELECT board_id, io_type_id, address FROM pi_board_io WHERE board_id=%s ORDER BY board_id, io_type_id" %r['id']
+            res =  query(q) 
+            debug(res)
+            for r in res:
+                debug(r)
+                if r['io_type_id'] == 1:
+                    P[r['board_id']].portWrite(0xff)
+                elif r['io_type_id'] == 2:
+                    P[r['board_id']].portWrite(0)
     
 #~*************** INIZIO NUOVO DOMOCONTROL *******************
 @webiopi.macro             
@@ -544,12 +553,14 @@ def getMenuStatus(*args):
     if Q != R:
         Q.update(P)
         del Q['pcb']
+        #~ debug(Q)
         return json.dumps(Q)
     else:
         Q.update(P)
         del Q['pcb']
+        #~ debug(Q)
         return json.dumps(Q)
-    #~ debug(Q)
+    
     
 @webiopi.macro 
 def setReloadStatus():

@@ -172,13 +172,13 @@
                     $("#form1").html('');
                     break;                        
                 case 'boardIOSetup':
-                    //~ alert('BoardIOSetup');
+                    //~ alert('*****BoardIOSetup*****');
                     title = '<small>Board IO Setup</small>';
                     footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                     footer += '<input type="button" name="setup" value="Menu Setup" onclick="setCookies(\'page\',\'menuSetup\');getPage(1)" >';
                     footer += '<input type="button" name="setup" value="Board Setup" onclick="setCookies(\'page\',\'boardSetup\');getPage(1)" >';
                     footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
-                    webiopi().callMacro("setBoardIOSetup", id, setBoardIOSetup);
+                    webiopi().callMacro("setBoardIOSetup", getCookies()["board_id"] , setBoardIOSetup);
                     $("#form").html('');
                     $("#form1").html('');
                     break;   
@@ -232,7 +232,8 @@
                     break;
                 default:
                     //~ alert('Default');
-                    setCookies('name','login',1);
+                    setCookies('page','login',1);
+                    getPage();
                     break;
             } 
             
@@ -259,7 +260,8 @@
                     f += "<tr><td id='title'colspan=5>"+d(res['program'][r]['description'])+"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+d(res['type'][res['program'][r]['type_id']]['name'])+"</td></tr>";    
                     f += "<tr><td>Input</td><td>Inverted</td><td>Delay</td><td>Output</td><td>Edit</td></tr>";
                     if(res['program'][r]['IN'] == 1){var in_image = 'in_off.png'}else{var in_image = 'in_on.png'}
-                    f += "<td><input type='image' src='./images/"+in_image+"' width='60px' name='IN' value='"+res['program'][r]['IN']+"' /></td>";
+                    
+                    f += "<td><input type='image' src='./images/"+in_image+"' width='60px' name='IN' value='"+res['program'][r]['IN']+"' onclick='invertInput("+res['program'][r]['IN']+")' /></td>";
                     if(res['program'][r]['in_inverted'] == 1){var check = 'checked';} else {var check = '';}
                     f += "<td><input type='checkbox' name='in_inverted' "+check+" /></td>";
                     f += "<td>"+res['program'][r]['in_delay']+"</td>";
@@ -270,6 +272,10 @@
                 }
                 f += "</table></div>";
                 $("#form").html(f); 
+        }
+        
+        function invertInput(id){
+            alert(id);
         }
         
         //verifica se le credenziali sono corrette
@@ -600,8 +606,8 @@
             f +=            '<table class="f-h" align=center><tr><th>Name</th><th>Description</th><th title="Board Address">Add</th><th title="Enable">BT</th><th>En</th><th>Save</th><th>IO</th></tr>';
             for (r in res) {                    
                 f += '<input type="hidden" name="id['+ res[r]['id'] +']" value="'+ res[r]['id'] +'" />';
-                f += '<td><input type="text" size="6" name="name['+ res[r]['id'] +']" value="'+ res[r]['name'] +'" /></td>';
-                f += '<td><input type="text" size="16" name="description['+ res[r]['id'] +']" value="'+ res[r]['description'] +'"  /></td>';
+                f += '<td><input type="text" size="6" name="name['+ res[r]['id'] +']" value="'+ d(res[r]['name']) +'" /></td>';
+                f += '<td><input type="text" size="16" name="description['+ res[r]['id'] +']" value="'+ d(res[r]['description']) +'"  /></td>';
                 f += '<td><input type="text" size="1" name="address['+ res[r]['id'] +']" value="'+ res[r]['address'] +'"  /></td>';
                 f += '<td><input type="text" size="1" name="board_type['+ res[r]['id'] +']" value="'+ res[r]['board_type'] +'" title="Board Type: 1-I2C 2-RS485" /></td>';
                 var checked = '';
@@ -609,7 +615,7 @@
                 
                 f += '<td><input type="checkbox" id="enable'+res[r]['id']+'" name="enable['+ res[r]['id'] +']" value="'+ res[r]['enable'] +'" '+checked+'  /></td>';
                 f += '<td><input type="button" id="valida" name="valida" value="Save" onclick=setBoardSetupSave('+res[r]["id"]+'); /></td>';
-                f += '<td><input type="button" id="addBoardIOSetupEdit" name="edit" value="Edit" onclick="setCookies(\'page\',\'boadIOSetup\','+res[r]['id']+');"; /></td>';
+                f += '<td><input type="button" id="addBoardIOSetupEdit" name="edit" value="Edit" onclick="setCookies(\'page\',\'boardIOSetup\','+res[r]['id']+'); setCookies(\'board_id\','+res[r]['id']+'); getPage('+res[r]['id']+');" /></td>';
                 f += '</tr>';
             }
             f +=            '<tr><td colspan=6><input type="button" id="add" name="add" value="Add" onclick="addBoardSetup();"; /></td></tr> ';
@@ -650,7 +656,7 @@
         //Board IO Setup           
         var setBoardIOSetup = function (macro, args, response) {
             var res = $.parseJSON(response);
-            alert(response);
+            //~ alert(response);
             var bid = '';
             var f = '';
             for(r in res['board_io']) {
@@ -682,8 +688,8 @@
                     f += '<option value="'+res['io'][io]['id']+'" '+selected+' >'+ res['io'][io]['name'] +'</option>';
                 }
                 f += '</select>';
-                f += '<input type="text" id="name" name="name" value="'+res['board_io'][r]['name']+'" size="5" title="Name of Input" />';
-                f += '<input type="text" id="description" name="description" value="'+res['board_io'][r]['description']+'" size="8" title="Description of Input" />';
+                f += '<input type="text" id="name" name="name" value="'+d(res['board_io'][r]['name'])+'" size="5" title="Name of Input" />';
+                f += '<input type="text" id="description" name="description" value="'+d(res['board_io'][r]['description'])+'" size="8" title="Description of Input" />';
                 f += '<input type="text" id="address" name="address" value="'+res['board_io'][r]['address']+'" size="1" title="Address of Input" />';
                 var checked='';
                 if(res['board_io'][r]['enable'] == 1) {checked='checked=checked';}
@@ -693,7 +699,8 @@
                 f += '</form>';
                 f += '</div>';
             }
-            f += '<center><input type="button" id="add" name="add" value="Add input" onclick="addBoardIOSetup('+res['board_io'][r]['id']+');"; />';
+            //~ alert(JSON.stringify(getCookies()['board_id']));
+            f += '<center><input type="button" id="add" name="add" value="Add input" onclick="addBoardIOSetup('+getCookies()['board_id']+');"; />';
             
             f += '</center>';
             //~ f += response;
