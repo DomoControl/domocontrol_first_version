@@ -129,23 +129,26 @@ def setBoardIO():
     for r in res:
         P['type'].update({r['id'] : r})
 
-def getIO(io_id,all=0): #return IO status
-    #~ debug("%s  %s" %(io_id,P['board_io'][io_id]))
+def getIO(io_id, p_id, All=0): #update IN status in P dict
+    #~ debug('io_id=%s  p_id=%s all=%s' %(io_id, p_id, All))
     board_id =  P['board_io'][io_id]['board_id']
     io_address = int(P['board_io'][io_id]['address'])
-    io = P['pcb'][board_id].portRead()
-    if board_id == 2:
-        #~ debug("In status (board_id, io_address, status): %s %s  %s" %(board_id, io_address, io))
+    
+    if io_address > 0 : #Board I2C and io = input
+        io = P['pcb'][board_id].portRead()
+        #~ debug('============>>>>>>>> io=%s' %io)
+        if All == 1:
+            return io
+        else:
+            P['program'][p_id].update({'IN' : io & M[io_address]}) 
+            
+    elif io_address == 0 : #io = input and input = web touch
+        if All == 1:
+            return None
         pass
-    if all == 1:
-        return io
-    if io & M[io_address]:
-        return int(1)
-    else:
-        return int(0)
 
 def setProgram(): #Put into P dict all pi_program DB
-    q = "SELECT * FROM pi_program"
+    q = "SELECT * FROM pi_program WHERE enable=1"
     res = query(q)
     P['program'] = {}
     for r in res:
@@ -154,26 +157,31 @@ def setProgram(): #Put into P dict all pi_program DB
         P['program'][r['id']].update({'OUT' : 0})
         P['program'][r['id']].update({'IN_DELAY' : 0})
         P['program'][r['id']].update({'OUT_DELAY' : 0})
-        
+        P['program'][r['id']].update({'IN' : r['in_inverted']})
+    #~ debug(P['program'])
              
-def setIO(io_id, OUT):
+
+
+def setOUT(io_id, p_id, OUT): #Set OUT status
     board_id =  P['board_io'][io_id]['board_id']
     io_address = int(P['board_io'][io_id]['address'])
-    io_status = getIO(io_id,1)
+    io_status = P['pcb'][board_id].portRead()
     
     if OUT == 1:
-        #~ debug('A')
-        out = io_status | M[io_address] 
+        out = io_status | M[io_address]
+        #~ debug("PRIMA  io_id=%s   p_id=%s  out=%s   OUT=%s   io_status=%s " %(io_id, p_id,  out,  OUT, io_status))
         P['pcb'][board_id].portWrite(out)
+        #~ P['program'][p_id].update({'OUT' : '0'})
     elif OUT == 0:
+        out = io_status ^ M[io_address] 
+        #~ debug("PRIMA  io_id=%s   p_id=%s  out=%s   OUT=%s   io_status=%s " %(io_id, p_id,  out,  OUT, io_status))
         if io_status & M[io_address] > 0:
-            #~ debug('B')
-            out = io_status ^ M[io_address] 
             P['pcb'][board_id].portWrite(out)
+            #~ P['program'][p_id].update({'OUT' : '0'})
         else:
-            #~ debug('C')
             out = '-'
-    #~ debug("OUT value (io_id, io_status, io_address, out_value, out):%s  %s  %s  %s  %s" %(io_address, io_status, m[io_address],  OUT, out))
+    #~ debug("DOPO  io_id=%s   p_id=%s  out=%s   OUT=%s   io_status=%s " %(io_id, p_id,  out,  OUT, io_status))
+    #~ debug("OUT value (io_id, io_status, io_address, out_value, out):%s  %s  %s  %s  %s" %(io_address, io_status, M[io_address],  OUT, out))
     
 def setup():
     
@@ -185,11 +193,10 @@ def setup():
     
 def loop():
     debug("*" * 100)
-    #~ debug(P)
+    
     for r in P['program']:
-        P['program'][r].update({'IN' : getIO(P['program'][r]['in_id'])}) 
-        #~ debug(P['program'][r])
-        #~ debug(P['program'][r]['IN_DELAY'] >= P['program'][r]['in_delay'])
+     
+        getIO(P['program'][r]['in_id'],r) #read io status and update IN status in P dict 
         
         if P['program'][r]['type_id'] == 1: #=========>>>>>>>>>>> routine ON/OFF
             in_inverted = 1 if P['program'][r]['in_inverted'] == 1 else 0 
@@ -203,13 +210,12 @@ def loop():
         if P['program'][r]['type_id'] == 4: #=========>>>>>>>>>>> Manual (switch by web)
             in_inverted = 1 if P['program'][r]['in_inverted'] == 1 else 0 
             out_inverted = 0 if P['program'][r]['out_inverted'] == 1 else 1
-            if P['program'][r]['IN'] == in_inverted:
+            if int(P['program'][r]['IN']) == in_inverted:
                 P['program'][r].update({'OUT' : int(out_inverted)})
             else:
                 P['program'][r].update({'OUT' : int(not out_inverted)})
-                P['program'][r]['IN_DELAY'] = 0
-
-        setIO(P['program'][r]['out_id'], P['program'][r]['OUT'])
+            
+        setOUT(P['program'][r]['out_id'], r, P['program'][r]['OUT'])
     webiopi.sleep(1)
 
 
@@ -233,6 +239,16 @@ def destroy(): #Setta gli I/O come out a zero
                     P[r['board_id']].portWrite(0)
     
 #~*************** INIZIO NUOVO DOMOCONTROL *******************
+@webiopi.macro 
+def invertInput(id):
+    debug(P['program'])
+    if int(P['program'][int(id)]['IN']) == 1:
+        P['program'][int(id)].update({'IN':'0'})
+    else:
+        P['program'][int(id)].update({'IN':'1'})
+    #~ debug(P['program'])
+
+
 @webiopi.macro             
 def setLogin(*args):
     #~ debug("%s  %s" %(args[0],args[1]))

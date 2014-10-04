@@ -225,6 +225,7 @@
                     footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                     footer += '<input type="button" name="setup" value="Menu" onclick="setCookies(\'page\',\'menu\'); getPage(1)" >';
                     footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
+                    stopInterval();
                     startStatus();
                     
                     $("#form").html('')
@@ -261,7 +262,7 @@
                     f += "<tr><td>Input</td><td>Inverted</td><td>Delay</td><td>Output</td><td>Edit</td></tr>";
                     if(res['program'][r]['IN'] == 1){var in_image = 'in_off.png'}else{var in_image = 'in_on.png'}
                     
-                    f += "<td><input type='image' src='./images/"+in_image+"' width='60px' name='IN' value='"+res['program'][r]['IN']+"' onclick='invertInput("+res['program'][r]['IN']+")' /></td>";
+                    f += "<td><input type='image' src='./images/"+in_image+"' width='60px' name='IN' value='"+res['program'][r]['IN']+"' onclick='invertInput("+r+")' /></td>";
                     if(res['program'][r]['in_inverted'] == 1){var check = 'checked';} else {var check = '';}
                     f += "<td><input type='checkbox' name='in_inverted' "+check+" /></td>";
                     f += "<td>"+res['program'][r]['in_delay']+"</td>";
@@ -274,8 +275,12 @@
                 $("#form").html(f); 
         }
         
-        function invertInput(id){
-            alert(id);
+        //~ To invert INPUT
+        function invertInput(id){ 
+            //~ alert(id);
+            webiopi().callMacro("invertInput", id);
+            //~ alert(getCookies()['page']);
+            getPage();
         }
         
         //verifica se le credenziali sono corrette
@@ -778,7 +783,12 @@
             f += "<table width=100%><tr><td id='title' colspan=2>Program Setup n."+res['program'][0]['id']+"  "+ d(res['program'][0]['name']) + "</td></tr>";
             f += "<input id='id' type='hidden' name='id' value='"+ res['program'][0]['id'] +"' />";
             f += "<tr><td>Name: <input type='text' id='name' name='name' value='"+d(res['program'][0]['name'])+"' size='8' title='Name of program' /></td>";
-            f += "<td>Description: <input type='text' id='description' name='description' value='"+d(res['program'][0]['description'])+"' size='10' title='Description of program' /></td></tr>";
+            f += "<td>Description: <input type='text' id='description' name='description' value='"+d(res['program'][0]['description'])+"' size='10' title='Description of program' /></td>";
+            
+            var enable='';
+            if(res['program'][0]['enable'] == 1) {enable='checked=checked';}
+            f += '<td>Enable: <input type="checkbox" id="enable" name="enable" value="'+res['program'][0]['enable']+'" '+enable+' title="Select for program enables" /></td></tr>';
+            
             
             f += '<tr><td colspan=2>Type of program: <select id="type" name="type" title="Select Type Function" onChange="getType();">';
             for(r in res['type']) {
@@ -819,6 +829,7 @@
             var out_checked='';
             if(res['program'][0]['out_inverted'] == 1) {out_checked='checked=checked';}
             f += '<td><input type="checkbox" id="out_inverted" name="out_inverted" value="'+res['program'][0]['out_inverted']+'" '+out_checked+' title="Select for inverted Output" /></td>';
+            
             
             f += '<td><input type="button" name="save" value="Save" onclick="setCookies(\'page\',\'programSetup\'); saveProgramSetup();" /></td>';
             f += '</table></form>';
@@ -889,6 +900,10 @@
             r += 'id='+$('#ProgramSetupForm').find('input[name="id"]').val();
             r += ',name='+$('#ProgramSetupForm').find('input[name="name"]').val();
             r += ',description='+$('#ProgramSetupForm').find('input[name="description"]').val();
+            
+            var enable=$('#enable').is(':checked') ? '1':'0';
+            r += ',enable='+enable;
+            
             r += ',in_id='+$('#ProgramSetupForm').find('select[name="in"]').val() ;
             var in_inverted=$('#in_inverted').is(':checked') ? '1':'0';
             r += ',in_inverted='+in_inverted;
