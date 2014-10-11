@@ -6,7 +6,8 @@
     <title>Domus Control</title>
     <link href="./css/style.css" rel="stylesheet" type="text/css">
     <script type="text/javascript" src="/webiopi.js"></script>
-    <!-- <script language="Javascript" src="http://www.codehelper.io/api/ips/?js"></script> -->
+    <!-- <script type="text/javascript" src="/jquery.js"></script> -->
+    <!-- <script language="Javascript" src="http://www.codehelper.io/api/ips/?js"></script>  -->
     <script type="text/javascript"> 
 
         var Interval = null; 
@@ -15,15 +16,44 @@
         var name = '';
         var surname = '';
         var page = '';
+        var LANG;
+        var status;
 
         //Ciclo principale
-        webiopi().ready(function() {
-            getPage(1);
-                
-  
-            webiopi().refreshGPIO();
+        webiopi().ready(function(){
+            getLangDict1();
+            //~ alert('qui');
+
         });
-        // Fine main ciclo
+        
+        function getLangDict1(){
+            if(getCookies()['lang']==undefined){var lang='en';}else{var lang=getCookies()['lang'];}
+            webiopi().callMacro("getLangDict", lang , getLangDict); 
+        }
+        
+        var getLangDict = function (macro, args, response) {
+            //~ alert(response);
+            //~ var res = eval(response);
+            var res = $.parseJSON(response);
+            LANG = res;
+            //~ alert('===>>>'+JSON.stringify(LANG));
+            getPage();
+        }
+        
+        //return translation terms
+        function L(tag){
+            //~ alert('===>>>'+JSON.stringify(tag));
+            var l = LANG[tag];
+            if(l==undefined){
+                //~ alert('termine da tradurre:'+tag);
+                langAdd(tag);
+                return d(tag);
+            }
+            else{
+                //~ alert('qui');
+                return d(l); //return translate term
+            }
+        }
 
         //Set LOG into database
         function logt(page) {
@@ -82,14 +112,14 @@
             switch(page) {
                 case 'login':
                     //~ alert('Login');
-                    title = '<small>Login</small>';
-                    footer = '<span>Inserisci username e password</span>';
+                    title = '<small>'+L('login')+'</small>';
+                    footer = '<span>'+L('insert_username_and_password')+'</span>';
                     var f = '<form id="login">';
                     f +=            '<fieldset>';
-                    f +=                '<p><center>Login di prova: luca  -  Password: 123<br>Se sei interessato a contribuire scrivi a subluca@gmail.com</center></p>'
-                    f +=                '<p><label class="field" for="Username">Username</label><input id="username" type=text name="username" value="" required autofocus class="textbox-300"></p>';
-                    f +=                '<p><label class="field" for="Password">Password</label><input id="password" type=password name="password" value="" required class="textbox-300"></p>';
-                    f +=                '<p><label class="field" for="Entra">&nbsp;</label><input id="entra" type="button" name="entra" value="Entra" onclick=Login();  class="textbox-300"></p>';
+                    f +=                '<p><center>'+L('login_message')+'</center></p>'
+                    f +=                '<p><label class="field" for="Username">'+L('username')+'</label><input id="username" type=text name="username" value="" required autofocus class="textbox-300"></p>';
+                    f +=                '<p><label class="field" for="Password">'+L('password')+'</label><input id="password" type=password name="password" value="" required class="textbox-300"></p>';
+                    f +=                '<p><label class="field" for="Entra">&nbsp;</label><input id="entra" type="button" name="entra" value="'+L('login')+'" onclick=Login();  class="textbox-300"></p>';
                     f +=            '</fieldset>';
                     //~ f +=        '</div>';
                     f +=    '</form>';
@@ -98,21 +128,34 @@
                 case 'menu':
                     //~ alert('Menu');
                     title = '<small>Menu</small>'
-                    footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
-                    footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';   
+                    footer = '<span><input type="button" name="footer" value="'+L('logout')+'" onclick=LogOut() ></span>' ;
+                    footer += '<span>'+L('welcome')+' ' + getCookies()["username"] + '</span>';   
                     $("#form").html('<p class="but"><input type="button" name="status" value="Status" onclick="setCookies(\'page\',\'menuStatus\'); getPage(1)" ></p>' +
                         '<p class="but"><input type="button" name="setup" value="Setup" onclick="setCookies(\'page\',\'menuSetup\');getPage(1)" ></p>');                  
                     $("#form1").html('');
                     break;
+				case 'menuStatus':
+                    //~ alert('MenuSetup');
+                    title = '<small>'+L('status')+'</small>';
+                    footer = '<span><input type="button" name="footer" value="'+L('logout')+'" onclick=LogOut() ></span>' ;
+                    footer += '<input type="button" name="setup" value="Menu" onclick="setCookies(\'page\',\'menu\'); getPage(1)" >';
+                    footer += '<span>'+L('welcome')+' ' + getCookies()["username"] + '</span>'; 
+                    stopInterval();
+                    startStatus();
+                    
+                    $("#form").html('')
+                    $("#form1").html('');
+                    break;
                 case 'menuSetup':
                     //~ alert('MenuSetup');
-                    title = '<small>Menu Setup</small>';
-                    footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
-                    footer += '<span><input type="button" name="footer" value="Main Menu" onclick="setCookies(\'page\',\'menu\');getPage(1)" ></span>' ;
-                    footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
+                    title = '<small>'+L('setup')+'</small>';
+                    footer = '<span><input type="button" name="footer" value="'+L('logout')+'" onclick=LogOut() ></span>' ;
+                    footer += '<span><input type="button" name="footer" value="'+L('main_menu')+'" onclick="setCookies(\'page\',\'menu\');getPage(1)" ></span>' ;
+                    footer += '<span>'+L('welcome')+' ' + getCookies()["username"] + '</span>';   
                     $("#form").html( '<p class="but"><input type="button" name="setup" value="User Setup" onclick="setCookies(\'page\',\'userSetup\');getPage(1)" ></p>' +
                         '<p class="but"><input type="button" name="setup" value="Area Setup" onclick="setCookies(\'page\',\'areaSetup\');getPage(1)" ></p>' +
                         '<p class="but"><input type="button" name="setup" value="Group Privilege" onclick="setCookies(\'page\',\'privilegeSetup\');getPage(1)" ></p>' +
+                        '<p class="but"><input type="button" name="setup" value="Lang Setup" onclick="setCookies(\'page\',\'langSetup\');getPage(1)" ></p>' +
                         '<p class="but"><input type="button" name="setup" value="Board Setup" onclick="setCookies(\'page\',\'boardSetup\');getPage(1)" ></p>' +
                         '<p class="but"><input type="button" name="setup" value="Input Setup" onclick="setCookies(\'page\',\'inputSetup\');getPage(1)" ></p>' +
                         '<p class="but"><input type="button" name="setup" value="Type Setup" onclick="setCookies(\'page\',\'typeSetup\');getPage(1)" ></p>' +
@@ -140,7 +183,17 @@
                     webiopi().callMacro("setArea", '' , setArea);
                     $("#form").html('');
                     $("#form1").html('');
-                    break;       
+                    break;  
+                case 'langSetup':
+                    //~ alert('AreaSetup');
+                    title = '<small>Lang Setup</small>';
+                    footer = '<span><input type="button" name="footer" value="LogOut" onclick="LogOut();getPage();" ></span>' ;
+                    footer += '<input type="button" name="setup" value="Menu Setup" onclick="setCookies(\'page\',\'menuSetup\');getPage(1)" >';
+                    footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
+                    webiopi().callMacro("getLang", '' , getLang);
+                    $("#form").html('');
+                    $("#form1").html('');
+                    break;
                 case 'privilegeSetup':
                     //~ alert('PrivilegeSetup');
                     title = '<small>Group Privileges</small>';
@@ -206,6 +259,7 @@
                     title = '<small>Program Setup</small>';
                     footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                     footer += '<input type="button" name="setup" value="Menu Setup" onclick="setCookies(\'page\',\'menuSetup\');getPage(1)" >';
+                    footer += '<input type="button" name="setup" value="Menu Status" onclick="setCookies(\'page\',\'menuStatus\');getPage(1)" >';
                     footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                     webiopi().callMacro("programSetup", '', programSetup);
                     $("#form").html('');
@@ -219,18 +273,6 @@
                     $("#form").html('');
                     $("#form1").html('');
                     break;
-                case 'menuStatus':
-                    //~ alert('MenuSetup');
-                    title = '<small>Status</small>';
-                    footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
-                    footer += '<input type="button" name="setup" value="Menu" onclick="setCookies(\'page\',\'menu\'); getPage(1)" >';
-                    footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
-                    stopInterval();
-                    startStatus();
-                    
-                    $("#form").html('')
-                    $("#form1").html('');
-                    break;
                 default:
                     //~ alert('Default');
                     setCookies('page','login',1);
@@ -238,7 +280,9 @@
                     break;
             } 
             
-            $("#title").html('<h1>DomoControl - ' + title + '</h1>');
+            $("#title").html('<h1>'+L('domocontrol')+' - ' + title + 
+				' <image src="images/it_flag.png" width="25px" onclick="setCookies(\'lang\',\'it\');getLangDict1()" />' +
+				'&nbsp;<image src="images/en_flag.png" width="25px" onclick="setCookies(\'lang\',\'en\');getLangDict1()" /></h1>');
             $("#footer").html(footer);
         }
         
@@ -254,25 +298,42 @@
         }
         
         var getMenuStatus = function (macro, args, response) {
-                var res = $.parseJSON(response);
-                if (res['equal'] != 'equal'){}
-                var f = "<div class='status'><table width=100%>";
-                for(r in res['program']){
-                    f += "<tr><td id='title'colspan=5>"+d(res['program'][r]['description'])+"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+d(res['type'][res['program'][r]['type_id']]['name'])+"</td></tr>";    
-                    f += "<tr><td>Input</td><td>Inverted</td><td>Delay</td><td>Output</td><td>Edit</td></tr>";
-                    if(res['program'][r]['IN'] == 1){var in_image = 'in_off.png'}else{var in_image = 'in_on.png'}
-                    
-                    f += "<td><input type='image' src='./images/"+in_image+"' width='60px' name='IN' value='"+res['program'][r]['IN']+"' onclick='invertInput("+r+")' /></td>";
-                    if(res['program'][r]['in_inverted'] == 1){var check = 'checked';} else {var check = '';}
-                    f += "<td><input type='checkbox' name='in_inverted' "+check+" /></td>";
-                    f += "<td>"+res['program'][r]['in_delay']+"</td>";
-                    if(res['program'][r]['OUT'] == 1){var out_image = 'out_on.png'}else{var out_image = 'out_off.png'}
-                    f += "<td><input type='image' src='./images/"+out_image+"' height='40px' name='OUT' value='"+res['program'][r]['OUT']+"' /></td>";                   
-                    f += "<td><input type='button' value='Edit' onclick='setCookies(\'page\',\'programSetup\');getPage(1)' /></td>";
-                    f += "</tr>";
+                //~ alert(response);
+                if(response=='uguale'){
+                    f = status;
                 }
-                f += "</table></div>";
+                else {
+                    $("#form1").html('response');
+					var res = $.parseJSON(response);
+                    
+					if (res['equal'] != 'equal'){}
+					var f = "<div class='status'><table width=100%>";
+					for(r in res['program']){
+						f += "<tr><td id='title'colspan=5>"+d(res['program'][r]['description'])+"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+d(res['type'][res['program'][r]['type_id']]['name'])+"</td></tr>";    
+						f += "<tr><td>"+d(res['board_io'][res['program'][r]['in_id']]['description'])+"</td><td>Inverted</td><td>Delay</td><td>"+d(res['board_io'][res['program'][r]['out_id']]['description'])+"</td><td>Edit</td></tr>";
+                    
+						if(res['program'][r]['IN'] == 1){var in_image = 'in_off.png'}else{var in_image = 'in_on.png'}
+						f += "<td><input type='image' src='./images/"+in_image+"' width='60px' name='IN' value='"+res['program'][r]['IN']+"' onclick='invertInput("+r+")' /></td>";
+                    
+						if(res['program'][r]['in_inverted'] == 1){var check = 'checked';} else {var check = '';}
+						f += "<td><input type='checkbox' name='in_inverted' "+check+" /></td>";
+						f += "<td>"+res['program'][r]['in_delay']+"</td>";
+                    
+						if(res['program'][r]['OUT'] == 1){var out_image = 'out_on.png'}else{var out_image = 'out_off.png'}
+						f += "<td><input type='image' src='./images/"+out_image+"' height='40px' name='OUT' value='"+res['program'][r]['OUT']+"' /></td>";                   
+						f += "<td><input type='button' value='Edit' onclick=\"setCookies(\'page\',\'programSetup\');getPage(1)\" /></td>";
+						f += "</tr>";
+					
+                    }
+                    f += "</table></div>";
+                    status = f;	
+                
+				}
+                
+                //~ $("#message").html(response); 
+                //~ alert(status);
                 $("#form").html(f); 
+                
         }
         
         //~ To invert INPUT
@@ -282,6 +343,7 @@
             //~ alert(getCookies()['page']);
             getPage();
         }
+        
         
         //verifica se le credenziali sono corrette
         function Login() {
@@ -315,6 +377,7 @@
             document.cookie = "user=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
             document.cookie = "surname=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
             setCookies('page','login');
+            //~ alert(getCookies()['page']);
             getPage();
         }
         
@@ -436,6 +499,65 @@
             getPage(1);
         }
         //Fine pagina setupArea
+
+        //Pagine Lang setup
+        var getLang = function (macro, args, response) {
+            res = eval(response);
+            //~ alert(response);
+            var f = '<form name="getLangForm" id="getLangForm">';
+            f +=    '<div class="fieldSet">';
+            f +=        '<fieldset>';
+            f +=            '<legend>Lang Form</legend>';
+            f +=            '<table class="f-h" align=center><tr><th>Tag</th><th>Language</th><th></th></tr>';
+            for (r in res) {
+                //~ $("#text").html(r + ' - ' + res[r]['name'] + '<br>'); 
+                f += '<input type="hidden" name="id['+ res[r]['id'] +']" value="'+ res[r]['id'] +'" />';
+                f += '<td><input type="text" name="tag['+ res[r]['id'] +']" value="'+ d(res[r]['tag']) +'"  size=10 readonly /></td>';
+                f += '<td style="text-align:left;"><input type="text" name="en['+ res[r]['id'] +']" value="'+ d(res[r]['en']) +'" size=14 />EN<br />';
+                f += '<input type="text" name="it['+ res[r]['id'] +']" value="'+ d(res[r]['it']) +'" size=14 />IT </td>';
+                f += '<td><input type="button" id="valida" name="valida" value="Save" onclick=langSave('+res[r]["id"]+'); /> ';
+                f += '<input type="button" id="delete" name="delete" value="Delete" onclick=langDelete('+res[r]["id"]+'); /> ';
+                
+                f += '</td></tr>';
+            }
+            f += '<tr><td colspan=3><input type="button" id="add" name="add" value="Add" onclick=langAdd(); /></td></tr> ';                
+            f +=        '</table>';
+            f +=        '</fieldset>';
+            f +=    '</div>';
+            f += '</form>'; 
+            $("#form").html(f);
+            
+        
+        }
+        function langSave(id) {
+            var r = '';
+            r += 'id='+$('#getLangForm').find('input[name="id['+id+']"]').val();
+            r += ',tag='+$('#getLangForm').find('input[name="tag['+id+']"]').val();
+            r += ',en='+$('#getLangForm').find('input[name="en['+id+']"]').val();
+            r += ',it='+$('#getLangForm').find('input[name="it['+id+']"]').val();
+            webiopi().callMacro("langSave", [r] );
+            //~ setCookies('page','langSetup');
+            getPage(1);
+        }
+                
+        function langDelete(id) {
+            webiopi().callMacro("langDelete", [id] );
+            //~ setCookies('page','langSetup');
+            getPage(1);
+        }
+        
+        function langAdd(tag){
+            webiopi().callMacro("langAdd",  tag, langAddOK );
+            //~ setCookies('page','langSetup');
+            
+        }
+        
+        var langAddOK = function(macro, args, response){
+			getPage(1);
+		}
+        
+        //Fine pagina Lang Setup
+
 
         //Pagine setupPrivilege
         var setPrivilege = function (macro, args, response) {
@@ -748,11 +870,10 @@
             for(r in res['program']) {
                 var selected='';
                 //~ if( res['program'][r]['board_id'] == res['board'][bo]['id'] ){selected='selected=selected';}
-                f += '<option value="'+res['program'][r]['id']+'" '+selected+' >'+ res['program'][r]['name'] +'</option>';
+                f += '<option value="'+res['program'][r]['id']+'" '+selected+' >'+ d(res['program'][r]['name']) +'</option>';
             }
             f += '</select>';
             f += '<input type="button" name="edit" value="Edit" onclick="setCookies(\'page\',\'programSetup\'); editProgramSetup();" />';
-            f += '<input type="button" name="delete" value="Delete" onclick="setCookies(\'page\',\'programSetup\'); deleteProgramSetup();" />';
             f += '<input type="button" id="add" name="add" value="Add program" onclick="addProgramSetup();"; />';
             f += '</center></form>';
             $("#form").html(f);
@@ -764,11 +885,6 @@
             getPage(1);
         }
 
-        function deleteProgramSetup(id) {
-            var r = $('#programSelectForm').find('select[name="id"]').val() ;
-            webiopi().callMacro("deleteProgramSetup",  [r]);
-            getPage(1);
-        }
         
         function addProgramSetup() {
             webiopi().callMacro("addProgramSetup",  '' );
@@ -798,7 +914,7 @@
             }
             f += '</select></td></tr></table>'; 
             
-            f += "<table width=100% style='border:1px solid gray; margin:5px; padding: 5px;' ><tr><td>Input</td><td>Inv.</td><td>Delay</td><td>Output</td><td>Inv.</td><td>Save</td></tr>";
+            f += "<table width=100% style='border:1px solid gray; margin:5px; padding: 5px;' ><tr><td>Input</td><td>Inv.</td><td>Delay</td><td>Output</td><td>Inv.</td><td>Save</td><td>Delete</td></tr>";
             f += "<tr><td>";
             
             f += '<select id="in" name="in" title="Select Input" >';
@@ -809,10 +925,8 @@
             }
             f += '</select>';
         
-            f += "</td>";
-            
-            f += "<td>";
-            
+            f += "</td><td>";
+                        
             var in_checked='';
             if(res['program'][0]['in_inverted'] == 1) {in_checked='checked=checked';}
             f += '<input type="checkbox" id="in_inverted" name="in_inverted" value="'+res['program'][0]['in_inverted']+'" '+in_checked+' title="Select for inverted Input" />';
@@ -832,6 +946,7 @@
             
             
             f += '<td><input type="button" name="save" value="Save" onclick="setCookies(\'page\',\'programSetup\'); saveProgramSetup();" /></td>';
+            f += '<td><input type="button" name="delete" value="Delete" onclick="setCookies(\'page\',\'programSetup\'); deleteProgramSetup('+res['program'][0]['id']+');" /></td>';
             f += '</table></form>';
             $("#form1").html(f);
             getType();
@@ -934,6 +1049,11 @@
             }
             
             webiopi().callMacro("saveProgramSetup", [r] );
+            getPage(1);
+        }
+        
+        function deleteProgramSetup(id) {
+            webiopi().callMacro("deleteProgramSetup",  id);
             getPage(1);
         }
                     

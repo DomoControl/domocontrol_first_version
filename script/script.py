@@ -25,7 +25,6 @@ import sqlite3
 import json
 import urllib
 from webiopi.devices.digital.pcf8574 import PCF8574
-from bitarray import bitarray
 
 def NOW(): 
     return datetime.datetime.now()    
@@ -43,6 +42,7 @@ DATABASE = '/home/pi/domocontrol/db/db.sqlite'
 
 P = {} #Array dove inserire lo stato delle variabili
 M = {1:1, 2:2, 3:4, 4:8, 5:16, 6:32, 7:64} #Mapping IO and OUT pin
+R = {} #Create dict to put element to send to Status Menu
 Q = {} #Create dict to put element to send to Status Menu
 GPIO = webiopi.GPIO
 TIMER = {} #Dizionario con il valore di tutti i timer
@@ -88,11 +88,6 @@ def query(q): #return list with dictionary
     cur.execute(q)
     return cur.fetchall()
     
-#~ def portStatus():
-    #~ q = "SELECT * FROM pi_program;"
-    #~ debug(q)
-    #~ return q
-
 def setBoard(): #Setta l'indirizzo delle board
     q = "SELECT id, address, board_type FROM pi_board WHERE address > 0 "
     res = query(q) 
@@ -241,7 +236,7 @@ def destroy(): #Setta gli I/O come out a zero
 #~*************** INIZIO NUOVO DOMOCONTROL *******************
 @webiopi.macro 
 def invertInput(id):
-    debug(P['program'])
+    #~ debug(P['program'])
     if int(P['program'][int(id)]['IN']) == 1:
         P['program'][int(id)].update({'IN':'0'})
     else:
@@ -328,6 +323,62 @@ def delAreaSave(*args):
     q = "DELETE FROM pi_area WHERE id="+args[0]
     #~ debug(q)
     conn(q)
+
+#Lang Setup
+@webiopi.macro             
+def getlang(*args):
+    q = "SELECT * FROM pi_lang ORDER BY tag"
+    #~ debug(q)
+    res = query(q)
+    #~ debug(res)
+    return res 
+
+@webiopi.macro 
+def langSave(*args):
+    #~ debug(args);
+    q = "UPDATE pi_lang SET "
+    i=0;
+    for r in args:
+        if r[0:3] == 'id=':
+            ids=r[3:]
+        else:
+            q += r[0:r.find('=')] + "='" + r[r.find('=')+1:] + "',"
+    q += "timestamp='%s'" %NOW()
+    q += " WHERE id=%s" % ids
+    #~ debug(q)
+    c = conn(q)
+
+@webiopi.macro 
+def langAdd(tag):
+    debug('Lang tag=%s' %tag)
+    if not tag:
+        tag='-'
+    q = "INSERT INTO pi_lang (tag,en,it) VALUES ('"+tag+"','"+tag+"','"+tag+"');"
+    debug(q)
+    conn(q)
+
+@webiopi.macro 
+def langDelete(*args):
+    q = "DELETE FROM pi_lang WHERE id="+args[0]
+    debug(q)
+    conn(q)
+
+@webiopi.macro     
+def getLangDict(lang):
+    #global Q #Azzera Q in modo che venga riinviato il dizionario dello stato IO
+    #Q.update({'program':''})#Azzera Q in modo che venga riinviato il dizionario dello stato IO
+    
+    q = "SELECT tag,%s FROM pi_lang" %lang
+    #~ debug("query getLangDict=%s" %q)
+    res = query(q)
+    L = {} #Dict translation
+    for r in res:
+        #~ debug("%s    %s" %(r['tag'],r[lang]))
+        L.update({r['tag']:r[lang]})
+    debug(L)
+    
+    return json.dumps(L)
+#End Lang
 
 @webiopi.macro             
 def setType(*args):
@@ -524,9 +575,9 @@ def getProgramSetup(*args):
     res = {}
     q = "SELECT * FROM pi_program WHERE id="+args[0]
     res['program'] = query(q)
-    q = "SELECT i.name ioname, bi.*, b.name bname, b.description bdescription FROM pi_board_io bi, pi_io_type i, pi_board b WHERE bi.io_type_id=i.id AND bi.board_id=b.id AND i.name='in';"
+    q = "SELECT i.name ioname, bi.*, b.name bname, b.description bdescription FROM pi_board_io bi, pi_io_type i, pi_board b WHERE bi.io_type_id=i.id AND bi.board_id=b.id AND i.name='in' AND bi.id NOT IN (SELECT p.in_id FROM pi_program p);"
     res['in'] = query(q)
-    q = "SELECT i.name ioname, bi.*, b.name bname, b.description bdescription FROM pi_board_io bi, pi_io_type i, pi_board b WHERE bi.io_type_id=i.id AND bi.board_id=b.id AND i.name='out';"
+    q = "SELECT i.name ioname, bi.*, b.name bname, b.description bdescription FROM pi_board_io bi, pi_io_type i, pi_board b WHERE bi.io_type_id=i.id AND bi.board_id=b.id AND i.name='out' AND bi.id NOT IN (SELECT p.out_id FROM pi_program p);"
     res['out'] = query(q)
     q = "SELECT * FROM pi_type;"
     res['type'] = query(q)
@@ -534,8 +585,8 @@ def getProgramSetup(*args):
     return json.dumps(res)
 
 @webiopi.macro
-def deleteProgramSetup(*args):
-    q = "DELETE FROM pi_program WHERE id="+args[0]
+def deleteProgramSetup(id):
+    q = "DELETE FROM pi_program WHERE id="+id
     debug(q)
     conn(q)
     setReloadStatus()
@@ -561,22 +612,51 @@ def saveProgramSetup(*args):
     c = conn(q)
     setReloadStatus()
 
+#~ compare = lambda a,b: len(a)==len(b) and len(a)==sum([1 for i,j in zip(a,b) if i==j])
+
+X=1
+Y=1
 @webiopi.macro 
 def getMenuStatus(*args):
-    R = {}
+    global Q
+    global P
+    global R
     R.update(P)
     del R['pcb']
-    if Q != R:
-        Q.update(P)
-        del Q['pcb']
-        #~ debug(Q)
-        return json.dumps(Q)
-    else:
-        Q.update(P)
-        del Q['pcb']
-        #~ debug(Q)
-        return json.dumps(Q)
+    global X
+    global Y
+    diverso=''
     
+    if not 'program' in Q:
+        #~ debug('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++Q not has program Key')    
+        Q = R
+        diverso='yes'
+        X=Y
+        X +=1
+        
+        
+    debug(dir(R['program']))
+    for r in R['program']:
+        
+        a=list(R['program'][r].values())
+        b=list(Q['program'][r].values())
+        
+        #~ a=['a','b','c']
+        #~ b=['','','']
+        
+        #~ debug("\n%s   \n%s   \n%s" %(a,b,compare(R['program'][r].values(),Q['program'][r].values())))
+        
+        if a==b:
+            debug("\n%s   \n%s   \n%s ===========================================================" %(a,b,a==b))
+            #~ Q=R
+        else:
+            debug("\n%s   \n%s   \n%s  -----------------------------------------\n-------------------------------\n------------------------------\n" %(a,b,a==b))
+            X +=1
+            
+    
+    debug("%s  %s" %(X,Y))
+    Y+=1
+    return json.dumps(Q)
     
 @webiopi.macro 
 def setReloadStatus():
