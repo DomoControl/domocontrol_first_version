@@ -30,7 +30,7 @@ def NOW():
     return datetime.datetime.now()    
     
 def debug(x):
-    webiopi.debug("==>> %s  %s \n" % (NOW(), x))
+    webiopi.debug("==>> %s  %s " % (NOW(), x))
 
     
 LOG = '/home/pi/domocontrol/test.log'
@@ -189,28 +189,52 @@ def setup():
     #~ destroy() #azzera tutti i port
     
 def loop():
-    debug("*" * 100)
+    debug("**********************\n")
     
     for r in P['program']:
      
         getIO(P['program'][r]['in_id'],r) #read io status and update IN status in P dict 
         
-        if P['program'][r]['type_id'] == 1: #=========>>>>>>>>>>> routine ON/OFF
-            in_inverted = 1 if P['program'][r]['in_inverted'] == 1 else 0 
-            out_inverted = 0 if P['program'][r]['out_inverted'] == 1 else 1
-            if P['program'][r]['IN'] == in_inverted:
-                P['program'][r].update({'OUT' : int(out_inverted)})
-            else:
-                P['program'][r].update({'OUT' : int(not out_inverted)})
-                P['program'][r]['IN_DELAY'] = 0
         
-        if P['program'][r]['type_id'] == 4: #=========>>>>>>>>>>> Manual (switch by web)
+        if P['program'][r]['type_id'] == 1: #=========>>>>>>>>>>> Pulse
+            debug('Pulse')
+            pass
+        elif P['program'][r]['type_id'] == 2: #=========>>>>>>>>>>> Timer
+            #~ debug('Timer')
+            #~ debug(P['program'][r])
             in_inverted = 1 if P['program'][r]['in_inverted'] == 1 else 0 
-            out_inverted = 0 if P['program'][r]['out_inverted'] == 1 else 1
             if int(P['program'][r]['IN']) == in_inverted:
-                P['program'][r].update({'OUT' : int(out_inverted)})
+                if 'TIMER' in P['program'][r]:
+                    if P['program'][r]['TIMER'] > 0:
+                        P['program'][r]['TIMER'] -= 1
+                        P['program'][r].update({'OUT' : int(1)})
+                    else:
+                        P['program'][r].update({'OUT' : int(0)})
+                else:
+                    timer=P['program'][r]['timer']
+                    timer = timer.split(';')
+                    timersec = int(timer[3]) #secondi
+                    timersec += int(timer[2]) * 60 #minuti
+                    timersec += int(timer[1]) * 3600 #ore
+                    timersec += int(timer[0]) * 3600 * 24 #giorni
+                    debug(timersec)
+                    P['program'][r].update({'TIMER' : int(timersec)})
             else:
-                P['program'][r].update({'OUT' : int(not out_inverted)})
+                P['program'][r].update({'OUT' : int(0)})
+                if 'TIMER' in P['program'][r]:
+                    del P['program'][r]['TIMER']
+                
+                
+                
+        elif P['program'][r]['type_id'] == 3: #=========>>>>>>>>>>> Chrono
+            debug('Chrono')
+            pass
+        elif P['program'][r]['type_id'] == 4: #=========>>>>>>>>>>> Manual
+            in_inverted = 1 if P['program'][r]['in_inverted'] == 1 else 0 
+            if int(P['program'][r]['IN']) == in_inverted:
+                P['program'][r].update({'OUT' : 1})
+            else:
+                P['program'][r].update({'OUT' : int(0)})
             
         setOUT(P['program'][r]['out_id'], r, P['program'][r]['OUT'])
     webiopi.sleep(1)

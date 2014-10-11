@@ -303,7 +303,6 @@
                     f = status;
                 }
                 else {
-                    $("#form1").html('response');
 					var res = $.parseJSON(response);
                     
 					if (res['equal'] != 'equal'){}
@@ -314,7 +313,16 @@
 						f += "<tr><td>"+d(res['board_io'][res['program'][r]['in_id']]['description'])+"</td><td>Inverted</td><td>Delay</td><td>"+d(res['board_io'][res['program'][r]['out_id']]['description'])+"</td><td>Edit</td></tr>";
                         
 						if(res['program'][r]['IN'] == 1){var in_image = 'in_off.png'}else{var in_image = 'in_on.png'}
-						f += "<td><input type='image' src='./images/"+in_image+"' width='60px' name='IN' value='"+res['program'][r]['IN']+"' onclick='invertInput("+r+")' /></td>";
+						f += "<td><input type='image' src='./images/"+in_image+"' width='60px' name='IN' value='"+res['program'][r]['IN']+"' onclick='invertInput("+r+")' />";
+                        //Show timer conter
+                        if(res['program'][r]['type_id'] == 2){
+                            if('TIMER' in res['program'][r]){f += "<br>"+res['program'][r]['TIMER']+" sec";}
+                            else{
+                                t = res['program'][r]['timer'].split(';');
+                                f += "<br>D:h:m:s "+t[0]+":"+t[1]+":"+t[2]+":"+t[3];
+                            }
+                        }
+                        f += "</td>";
                     
 						if(res['program'][r]['in_inverted'] == 1){var check = 'checked';} else {var check = '';}
 						f += "<td><input type='checkbox' name='in_inverted' "+check+" /></td>";
@@ -673,23 +681,21 @@
             
             res = eval(response);
             var f = '<form name="setTypeForm" id="setTypeForm">';
-            f +=    '<div class="fieldSet">';
-            f +=        '<fieldset>';
-            f +=            '<legend>Form Type Function</legend>';
+
+
             f +=            '<table class="f-h" align=center><tr><th>Name</th><th>Description</th><th>Save</th><th></th></tr>';
             for (r in res) {
                 //~ $("#text").html(r + ' - ' + res[r]['name'] + '<br>'); 
                 f += '<input type="hidden" name="id['+ res[r]['id'] +']" value="'+ res[r]['id'] +'" />';
-                f += '<td><input type="text" name="name['+ res[r]['id'] +']" value="'+ d(res[r]['name']) +'" readonly /></td>';
-                f += '<td><input type="text" name="description['+ res[r]['id'] +']" value="'+ d(res[r]['description']) +'"  /></td>';
+                f += '<td><input type="text" name="name['+ res[r]['id'] +']" value="'+ d(res[r]['name']) +'" readonly size=5 /></td>';
+                f += '<td><input style="text-align:left;" type="text" name="description['+ res[r]['id'] +']" value="'+ d(res[r]['description']) +'"  size=35 /></td>';
                 f += '<td><input type="button" id="valida" name="valida" value="Save" onclick=setTypeSave('+res[r]["id"]+'); /> ';
                 //~ f += '<input type="button" id="delete" name="delete" value="Delete" onclick=delTypeSave('+res[r]["id"]+'); /> ';
                 
                 f += '</td></tr>';
             }
-            f += '<tr><td colspan=3><input type="button" id="add" name="add" value="Add" onclick=setTypeAdd(); /></td></tr> ';                
+            //~ f += '<tr><td colspan=3><input type="button" id="add" name="add" value="Add" onclick=setTypeAdd(); /></td></tr> ';                
             f +=        '</table>';
-            f +=        '</fieldset>';
             f +=    '</div>';
             f += '</form>'; 
             //~ alert(f);
@@ -728,14 +734,11 @@
             //~ alert(response);
             res = eval(response);
             var f = '<form name="setBoardSetupForm" id="setBoardSetupForm">';
-            f +=    '<div class="fieldSet">';
-            f +=        '<fieldset>';
-            f +=            '<legend>Form Board Setup</legend>';
             f +=            '<table class="f-h" align=center><tr><th>Name</th><th>Description</th><th title="Board Address">Add</th><th title="Enable">BT</th><th>En</th><th>Save</th><th>IO</th></tr>';
             for (r in res) {                    
                 f += '<input type="hidden" name="id['+ res[r]['id'] +']" value="'+ res[r]['id'] +'" />';
-                f += '<td><input type="text" size="6" name="name['+ res[r]['id'] +']" value="'+ d(res[r]['name']) +'" /></td>';
-                f += '<td><input type="text" size="16" name="description['+ res[r]['id'] +']" value="'+ d(res[r]['description']) +'"  /></td>';
+                f += '<td><input type="text" size="4" name="name['+ res[r]['id'] +']" value="'+ d(res[r]['name']) +'" /></td>';
+                f += '<td><input type="text" size="12" name="description['+ res[r]['id'] +']" value="'+ d(res[r]['description']) +'"  /></td>';
                 f += '<td><input type="text" size="1" name="address['+ res[r]['id'] +']" value="'+ res[r]['address'] +'"  /></td>';
                 f += '<td><input type="text" size="1" name="board_type['+ res[r]['id'] +']" value="'+ res[r]['board_type'] +'" title="Board Type: 1-I2C 2-RS485" /></td>';
                 var checked = '';
@@ -748,8 +751,6 @@
             }
             f +=            '<tr><td colspan=6><input type="button" id="add" name="add" value="Add" onclick="addBoardSetup();"; /></td></tr> ';
             f +=        '</table>';
-            f +=        '</fieldset>';
-            f +=    '</div>';
             f += '</form>'; 
             //~ alert(f);
             $("#form").html(f);
@@ -871,7 +872,7 @@
             for(r in res['program']) {
                 var selected='';
                 //~ if( res['program'][r]['board_id'] == res['board'][bo]['id'] ){selected='selected=selected';}
-                f += '<option value="'+res['program'][r]['id']+'" '+selected+' >'+ d(res['program'][r]['name']) +'</option>';
+                f += '<option value="'+res['program'][r]['id']+'" '+selected+' >'+ d(res['program'][r]['name']) +' '+d(res['program'][r]['description'])+'</option>';
             }
             f += '</select>';
             f += '<input type="button" name="edit" value="Edit" onclick="setCookies(\'page\',\'programSetup\'); editProgramSetup();" />';
@@ -915,7 +916,7 @@
             }
             f += '</select></td></tr></table>'; 
             
-            f += "<table width=100% style='border:1px solid gray; margin:5px; padding: 5px;' ><tr><td>Input</td><td>Inv.</td><td>Delay</td><td>Output</td><td>Inv.</td><td>Save</td><td>Delete</td></tr>";
+            f += "<table width=100% style='border:1px solid gray; margin:5px; padding: 5px;' ><tr><td>Input</td><td>Inv.</td><td>Delay</td><td>Output</td><td>Save</td><td>Delete</td></tr>";
             f += "<tr><td>";
             
             f += '<select id="in" name="in" title="Select Input" >';
@@ -941,10 +942,6 @@
                 f += '<option value="'+res['out'][r]['id']+'" '+out_selected+' title="Select Output" >'+ res['out'][r]['bname'] + ' ' + res['out'][r]['name'] + ' </option>';
             }
             f += '</select></td>';                
-            var out_checked='';
-            if(res['program'][0]['out_inverted'] == 1) {out_checked='checked=checked';}
-            f += '<td><input type="checkbox" id="out_inverted" name="out_inverted" value="'+res['program'][0]['out_inverted']+'" '+out_checked+' title="Select for inverted Output" /></td>';
-            
             
             f += '<td><input type="button" name="save" value="Save" onclick="setCookies(\'page\',\'programSetup\'); saveProgramSetup();" /></td>';
             f += '<td><input type="button" name="delete" value="Delete" onclick="setCookies(\'page\',\'programSetup\'); deleteProgramSetup('+res['program'][0]['id']+');" /></td>';
@@ -1025,8 +1022,6 @@
             r += ',in_inverted='+in_inverted;
             r += ',in_delay='+$('#ProgramSetupForm').find('input[name="in_delay"]').val();
             r += ',out_id='+$('#ProgramSetupForm').find('select[name="out"]').val() ;
-            var out_inverted=$('#out_inverted').is(':checked') ? '1':'0';
-            r += ',out_inverted='+out_inverted;
             var type_id = $('#ProgramSetupForm').find('select[name="type"]').val() ;
             r += ',type_id='+type_id ;
             
