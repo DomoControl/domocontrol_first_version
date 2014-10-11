@@ -308,10 +308,11 @@
                     
 					if (res['equal'] != 'equal'){}
 					var f = "<div class='status'><table width=100%>";
+                    
 					for(r in res['program']){
 						f += "<tr><td id='title'colspan=5>"+d(res['program'][r]['description'])+"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+d(res['type'][res['program'][r]['type_id']]['name'])+"</td></tr>";    
 						f += "<tr><td>"+d(res['board_io'][res['program'][r]['in_id']]['description'])+"</td><td>Inverted</td><td>Delay</td><td>"+d(res['board_io'][res['program'][r]['out_id']]['description'])+"</td><td>Edit</td></tr>";
-                    
+                        
 						if(res['program'][r]['IN'] == 1){var in_image = 'in_off.png'}else{var in_image = 'in_on.png'}
 						f += "<td><input type='image' src='./images/"+in_image+"' width='60px' name='IN' value='"+res['program'][r]['IN']+"' onclick='invertInput("+r+")' /></td>";
                     

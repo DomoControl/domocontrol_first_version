@@ -135,7 +135,9 @@ def getIO(io_id, p_id, All=0): #update IN status in P dict
         if All == 1:
             return io
         else:
-            P['program'][p_id].update({'IN' : io & M[io_address]}) 
+            #~ debug("io=%s  M[io_address]=%s  io & M[io_address]=%s " %(io, M[io_address], io & M[io_address]))
+            
+            P['program'][p_id].update({'IN' : 1 if io & M[io_address] else 0}) 
             
     elif io_address == 0 : #io = input and input = web touch
         if All == 1:
@@ -242,6 +244,21 @@ def invertInput(id):
     else:
         P['program'][int(id)].update({'IN':'1'})
     #~ debug(P['program'])
+
+#~ compare = lambda a,b: len(a)==len(b) and len(a)==sum([1 for i,j in zip(a,b) if i==j])
+
+@webiopi.macro 
+def getMenuStatus(*args):
+    global Q
+    global P
+    global R
+    R.update(P)
+    del R['pcb']
+    
+    if not 'program' in Q:
+        #~ debug('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++Q not has program Key')    
+        Q = R
+    return json.dumps(R)
 
 
 @webiopi.macro             
@@ -611,52 +628,6 @@ def saveProgramSetup(*args):
     debug(q)
     c = conn(q)
     setReloadStatus()
-
-#~ compare = lambda a,b: len(a)==len(b) and len(a)==sum([1 for i,j in zip(a,b) if i==j])
-
-X=1
-Y=1
-@webiopi.macro 
-def getMenuStatus(*args):
-    global Q
-    global P
-    global R
-    R.update(P)
-    del R['pcb']
-    global X
-    global Y
-    diverso=''
-    
-    if not 'program' in Q:
-        #~ debug('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++Q not has program Key')    
-        Q = R
-        diverso='yes'
-        X=Y
-        X +=1
-        
-        
-    debug(dir(R['program']))
-    for r in R['program']:
-        
-        a=list(R['program'][r].values())
-        b=list(Q['program'][r].values())
-        
-        #~ a=['a','b','c']
-        #~ b=['','','']
-        
-        #~ debug("\n%s   \n%s   \n%s" %(a,b,compare(R['program'][r].values(),Q['program'][r].values())))
-        
-        if a==b:
-            debug("\n%s   \n%s   \n%s ===========================================================" %(a,b,a==b))
-            #~ Q=R
-        else:
-            debug("\n%s   \n%s   \n%s  -----------------------------------------\n-------------------------------\n------------------------------\n" %(a,b,a==b))
-            X +=1
-            
-    
-    debug("%s  %s" %(X,Y))
-    Y+=1
-    return json.dumps(Q)
     
 @webiopi.macro 
 def setReloadStatus():
