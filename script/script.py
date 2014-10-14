@@ -312,7 +312,7 @@ def getUser(args):
     user = query(q)
     q = "SELECT * FROM pi_privilege"
     privilege = query(q)
-    debug()
+    
     res = json.dumps([user,privilege]) 
     #~ debug(res)
     return res 
