@@ -27,8 +27,8 @@
         });
         
         function getLangDict1(){
-            if(getCookies()['lang']==undefined){var lang='en';}else{var lang=getCookies()['lang'];}
-            webiopi().callMacro("getLangDict", lang , getLangDict); 
+            if(getCookies()['language']==undefined){var language='en';}else{var language=getCookies()['language'];}
+            webiopi().callMacro("getLangDict", language , getLangDict); 
         }
         
         var getLangDict = function (macro, args, response) {
@@ -82,7 +82,9 @@
             if(name=='page'){
                 var now = new Date();
                 var time = now.getTime();
-                time += 3600 * 1000;
+                //~ alerta(document.cookie);
+                var session_timeout = getCookies()['session_timeout'];
+                time += session_timeout * 1000;
                 now.setTime(time);
                 //~ alert(now.toUTCString())
                 document.cookie = name+"="+value + '; expires=' + now.toUTCString() + '; path=/';
@@ -170,7 +172,7 @@
                     footer += '<input type="button" name="setup" value="Menu Setup" onclick="setCookies(\'page\',\'menuSetup\');getPage(1)" >';
                     footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                     //~ alert(getCookies()['user_id'] + document.cookie);
-                    webiopi().callMacro("setUser", getCookies()['user_id'] , setUser);
+                    webiopi().callMacro("getUser", getCookies()['user_id'] , getUser);
                     $("#form").html('');
                     $("#form1").html('');
                     break;                        
@@ -280,9 +282,10 @@
                     break;
             } 
             
-            $("#title").html('<h1>'+L('domocontrol')+' - ' + title + 
-				' <image src="images/it_flag.png" width="25px" onclick="setCookies(\'lang\',\'it\');getLangDict1()" />' +
-				'&nbsp;<image src="images/en_flag.png" width="25px" onclick="setCookies(\'lang\',\'en\');getLangDict1()" /></h1>');
+            //get language flag
+            if(getCookies()['language']=='en'){flag='<image src="images/en_flag.png" width="25px" />';}
+            else{flag='<image src="images/it_flag.png" width="25px" />';}
+            $("#title").html('<h1>'+L('domocontrol')+' - ' + title + ' '+ flag +'</h1>');
             $("#footer").html(footer);
         }
         
@@ -375,6 +378,8 @@
                 setCookies('username',res['username'],1);
                 setCookies('name',res['name'],1);
                 setCookies('surname',res['surname'],1);
+                setCookies('session_timeout',res['session'],1);
+                setCookies('language',res['lang'],1);
                 getPage();
             }
         }
@@ -385,26 +390,37 @@
             document.cookie = "username=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
             document.cookie = "user=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
             document.cookie = "surname=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+            document.cookie = "session_timeout=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+            document.cookie = "lang=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
             setCookies('page','login');
             //~ alert(getCookies()['page']);
             getPage();
         }
         
         //Pagine setupUser
-        var setUser = function (macro, args, response) {
+        var getUser = function (macro, args, response) {
             var res = eval(response);
             f = '<form name="setUserForm" id="setUserForm" onsubmit="checkEntries()">';
-            //~ f +=    '<p class="required">* Required</p>';
-            f +=    '<div class="fieldSet">';
-            f +=        '<fieldset>';
-            f +=            '<legend>Form Utente</legend>';
-            f +=            '<input type="hidden" name="id" value="'+ res[0][0]['id'] +'" class="textbox-300" >';
-            f +=            '<p><label class="field" for="Username">Username</label><input type="text" name="username" value="'+ d(res[0][0]['username']) +'" class="textbox-300" ></p>';
-            f +=            '<p><label class="field" for="Password">Password</label><input id="password" type="password" name="password" value="'+ res[0][0]['password'] +'" required class="textbox-300" ></p>';
-            f +=            '<p><label class="field" for="Reinsert">Reinsert</label><input id="confirmPassword" type="password" name="confirmPassword" value="" class="textbox-300"></p>';
-            f +=            '<p><label class="field" for="Name">Name</label><input type="text" name="name" value="'+ d(res[0][0]['name']) +'" class="textbox-300" ></p>';
-            f +=            '<p><label class="field" for="Surname">Surname</label><input type="text" name="surname" value="'+ d(res[0][0]['surname']) +'" class="textbox-300" ></p>';
-                            res[0][0]['active'] ? checked='checked="checked"' : checked=''; 
+            f += '<table width=100%>';
+            f +=    '<input type="hidden" name="id" value="'+ res[0][0]['id'] +'" class="textbox-300" >';
+            f +=     '<tr><td style="text-align:right;">'+L('username')+'</td><td><input type="text" name="username" value="'+ d(res[0][0]['username']) +'" class="textbox-300" /></td></tr>';
+            f +=     '<tr><td style="text-align:right;">'+L('password')+'</td><td><input id="password" type="password" name="password" value="'+ res[0][0]['password'] +'" required class="textbox-300" ></td></tr>';
+            f +=     '<tr><td style="text-align:right;">'+L('retype_password')+'</td><td><input id="confirmPassword" type="password" name="confirmPassword" value="" class="textbox-300"></td></tr>';
+            f +=     '<tr><td style="text-align:right;">'+L('name')+'</td><td><input type="text" name="name" value="'+ d(res[0][0]['name']) +'" class="textbox-300" ></td></tr>';
+            f +=     '<tr><td style="text-align:right;">'+L('surname')+'</td><td><input type="text" name="surname" value="'+ d(res[0][0]['surname']) +'" class="textbox-300" ></td></tr>';
+            //Checkbox language
+            f += '<tr><td style="text-align:right;">'+L('language')+'</td><td style="text-align:left;"><select id="lang" name="lang" title="Select Language" >';
+                var sel = '';
+                var lang={'en':L('english'),'it':L('italian')};
+                for(l in lang) {
+                    var lang_selected = '';
+                    if( res[0][0]['lang'] == l ){lang_selected='selected=selected';}
+                    f += '<option value="'+l+'" '+lang_selected+' >'+ lang[l] +'</option>';
+                }
+            f += '</select></td></tr>';
+            //end checkbox
+            f +=     '<tr><td style="text-align:right;">'+L('session_timeout')+'</td><td style="text-align:left;" ><input type="number" name="session" value="'+ d(res[0][0]['session']) +'" class="textbox-300" min=10 max=4000>minute</td></tr>';
+            res[0][0]['active'] ? checked='checked="checked"' : checked=''; 
             //Checkbox privilege
             var c = ''; var checked
             for(var k in res[1]) {
@@ -417,14 +433,11 @@
                         checked = 'checked="checked"';
                     }
                 }
-                f += '<p><label class="field" for="'+res[1][k]['name']+'">'+d(res[1][k]['name'])+' </label><input type="checkbox" id="privilege" name="privilege[]" value="'+d(res[1][k]['id'])+'" '+ checked +' class="textbox-300" />';
-                f += h(d(res[1][k]['description']))+'</p>'
+                f += '<tr><td style="text-align:right;">'+L(res[1][k]['name'])+'</td><td><input type="checkbox" id="privilege" name="privilege[]" value="'+d(res[1][k]['id'])+'" '+ checked +' class="textbox-300" /></td></tr>';
             }
             //end checkbox
-            f +=            '<p><label class="field" for="Valida">&nbsp;</label><input id="valida" type="button" name="valida" value="Save" onclick=setUserSave();  class="textbox-300"></p>';
-            f +=        '</fieldset>';
-            f +=    '</div>';
-            f += '</form>';                
+            f +=            '<tr><td>&nbsp;</td><td><input id="valida" type="button" name="'+L('save')+'" value="Save" onclick=setUserSave();  class="textbox-300"></td></tr>';
+            f += '</table></form>';                
             //~ alert(f);
             $("#form").html(f);
         }
@@ -440,6 +453,8 @@
             r += ',password='+$('#setUserForm').find('input[name="password"]').val();
             r += ',name='+$('#setUserForm').find('input[name="name"]').val();
             r += ',surname='+$('#setUserForm').find('input[name="surname"]').val();
+            r += ',session='+$('#setUserForm').find('input[name="session"]').val();
+            r += ',lang='+$('#setUserForm').find('select[name="lang"]').val() ;
             
             var p = ',privilege=';
             var k = 0;
@@ -511,13 +526,11 @@
 
         //Pagine Lang setup
         var getLang = function (macro, args, response) {
-            res = eval(response);
             //~ alert(response);
+            res = eval(response);
+            
             var f = '<form name="getLangForm" id="getLangForm">';
-            f +=    '<div class="fieldSet">';
-            f +=        '<fieldset>';
-            f +=            '<legend>Lang Form</legend>';
-            f +=            '<table class="f-h" align=center><tr><th>Tag</th><th>Language</th><th></th></tr>';
+            f +=    '<table class="f-h" align=center><tr><th>Tag</th><th>Language</th><th></th></tr>';
             for (r in res) {
                 //~ $("#text").html(r + ' - ' + res[r]['name'] + '<br>'); 
                 f += '<input type="hidden" name="id['+ res[r]['id'] +']" value="'+ res[r]['id'] +'" />';
@@ -530,9 +543,7 @@
                 f += '</td></tr>';
             }
             f += '<tr><td colspan=3><input type="button" id="add" name="add" value="Add" onclick=langAdd(); /></td></tr> ';                
-            f +=        '</table>';
-            f +=        '</fieldset>';
-            f +=    '</div>';
+            f += '</table>';
             f += '</form>'; 
             $("#form").html(f);
             

@@ -98,7 +98,10 @@ def setBoard(): #Setta l'indirizzo delle board
         if r['board_type'] == 1: #Board I2C
             #~ P['board']['board_id'] = {'board' : PCF8574(int(r['board_address']))}
             P['board'].update({r['id'] : r})
-            P['pcb'].update({r['id'] : PCF8574(int(r['address']))})
+            try:
+                P['pcb'].update({r['id'] : PCF8574(int(r['address']))})
+            except:
+                debug('Board %s problem' %r['id'])
             
         elif r['board_type'] == 2: #Board RS485
             pass
@@ -227,7 +230,7 @@ def loop():
                 
                 
         elif P['program'][r]['type_id'] == 3: #=========>>>>>>>>>>> Chrono
-            debug('Chrono')
+            #~ debug('Chrono')
             pass
         elif P['program'][r]['type_id'] == 4: #=========>>>>>>>>>>> Manual
             in_inverted = 1 if P['program'][r]['in_inverted'] == 1 else 0 
@@ -247,17 +250,20 @@ def destroy(): #Setta gli I/O come out a zero
     for r in res:
         #~ debug(r)
         if r['board_type'] == 1:
-            P[r['id']] = PCF8574(int(r['address']))
-            
-            q = "SELECT board_id, io_type_id, address FROM pi_board_io WHERE board_id=%s ORDER BY board_id, io_type_id" %r['id']
-            res =  query(q) 
-            debug(res)
-            for r in res:
-                debug(r)
-                if r['io_type_id'] == 1:
-                    P[r['board_id']].portWrite(0xff)
-                elif r['io_type_id'] == 2:
-                    P[r['board_id']].portWrite(0)
+            try:
+                P[r['id']] = PCF8574(int(r['address']))
+                
+                q = "SELECT board_id, io_type_id, address FROM pi_board_io WHERE board_id=%s ORDER BY board_id, io_type_id" %r['id']
+                res =  query(q) 
+                debug(res)
+                for r in res:
+                    debug(r)
+                    if r['io_type_id'] == 1:
+                        P[r['board_id']].portWrite(0xff)
+                    elif r['io_type_id'] == 2:
+                        P[r['board_id']].portWrite(0)
+            except:
+                debug('Board %s problem' %r['id'])
     
 #~*************** INIZIO NUOVO DOMOCONTROL *******************
 @webiopi.macro 
@@ -288,7 +294,7 @@ def getMenuStatus(*args):
 @webiopi.macro             
 def setLogin(*args):
     #~ debug("%s  %s" %(args[0],args[1]))
-    q="SELECT id,username,name,surname FROM pi_user WHERE username='%s' AND password='%s'" %(args[0],args[1])
+    q="SELECT id,username,name,surname,session,lang FROM pi_user WHERE username='%s' AND password='%s'" %(args[0],args[1])
     c = query(q)
     #~ debug(q)
     if len(c) > 0:
@@ -297,15 +303,16 @@ def setLogin(*args):
         return "Login_NO"
     
 @webiopi.macro             
-def setUser(args):
+def getUser(args):
     if args == False:
         return
     user_id = json.loads(args)
     q = "SELECT * FROM pi_user WHERE id = '%s'" %user_id
+    
     user = query(q)
     q = "SELECT * FROM pi_privilege"
     privilege = query(q)
-    
+    debug()
     res = json.dumps([user,privilege]) 
     #~ debug(res)
     return res 
@@ -367,7 +374,7 @@ def delAreaSave(*args):
 
 #Lang Setup
 @webiopi.macro             
-def getlang(*args):
+def getLang(*args):
     q = "SELECT * FROM pi_lang ORDER BY tag"
     #~ debug(q)
     res = query(q)
