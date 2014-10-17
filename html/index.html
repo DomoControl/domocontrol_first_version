@@ -397,7 +397,7 @@
             getPage();
         }
         
-        //Pagine setupUser
+        //Pagine setupUseralert(id);
         var getUser = function (macro, args, response) {
             var res = eval(response);
             f = '<form name="setUserForm" id="setUserForm" onsubmit="checkEntries()">';
@@ -422,9 +422,8 @@
             f +=     '<tr><td style="text-align:right;">'+L('session_timeout')+'</td><td style="text-align:left;" ><input type="number" name="session" value="'+ d(res[0][0]['session']) +'" class="textbox-300" min=10 max=4000>minute</td></tr>';
             res[0][0]['active'] ? checked='checked="checked"' : checked=''; 
             //Checkbox privilege
-            var c = ''; var checked
+            var c = ''; var checked; var admin='';
             for(var k in res[1]) {
-                
                 checked = '';
                 var pp = []; pp = res[0][0]['privilege'].split(';');
                 for (var priv in pp) {
@@ -432,14 +431,82 @@
                     if (res[1][k]['id'] == pp[priv]) {
                         checked = 'checked="checked"';
                     }
+                    if(res[1][k]['id']==4){admin='yes';}
                 }
                 f += '<tr><td style="text-align:right;">'+L(res[1][k]['name'])+'</td><td><input type="checkbox" id="privilege" name="privilege[]" value="'+d(res[1][k]['id'])+'" '+ checked +' class="textbox-300" /></td></tr>';
             }
             //end checkbox
-            f +=            '<tr><td>&nbsp;</td><td><input id="valida" type="button" name="'+L('save')+'" value="Save" onclick=setUserSave();  class="textbox-300"></td></tr>';
-            f += '</table></form>';                
+            f +=            '<tr><td>&nbsp;</td><td><input id="valida" type="button" name="'+L('save')+'" value="Save" onclick=setUserSave();  class="textbox-300">';
+            if(admin=='yes'){
+                f += '<input type="button" id="add" name="add" value="Add user" onclick="addUserSetup();"; /></td></tr>';
+            }else{f += '</td></tr>';}
+            f += '</table>';
+            
+            if(admin=='yes'){
+                f += '<table width=100% style="border:1px solid gray;"><caption style="font-weight:bold; background-color:#2952D8; color:white; margin-top:20px;">'+L('users_privileges')+'</caption>';
+                f += '<tr><th>username</th><th>Name</th><th>Surname</th><th>Password</th><th>Edit</th></tr>';
+                for(var z in res[2]) {
+                    f += '<input type="hidden" id="setUserId'+res[2][z]['id']+'" name="setUserId'+res[2][z]['id']+'" value="'+res[2][z]['id']+'" />';
+                    f += '<tr><td><input style="width:60px;" type="text" id="setUserUsername'+res[2][z]['id']+'" name="setUserUsername'+res[2][z]['id']+'" value="'+res[2][z]['username']+'" /></td>';
+                    f += '<td><input style="width:100px;" type="text" id="setUserName'+res[2][z]['id']+'" name="setUserName'+res[2][z]['id']+'" value="'+res[2][z]['name']+'" /></td>';
+                    f += '<td><input style="width:100px;" type="text" id="setUserSurname'+res[2][z]['id']+'" name="setUserSurname'+res[2][z]['id']+'" value="'+res[2][z]['surname']+'" /></td>';
+                    f += '<td><input style="width:100px;" type="password" id="setUserPassword'+res[2][z]['id']+'" name="setUserPassword'+res[2][z]['id']+'" value="'+res[2][z]['password']+'" /></td>';
+                    f += '<td><input type="button" name="edit" value="Edit" onclick="setCookies(\'page\',\'userSetup\'); editUserSetup('+res[2][z]['id']+');" />';
+                    f += '<input type="button" name="del" value="Del" onclick="setCookies(\'page\',\'userSetup\'); delUserSetup('+res[2][z]['id']+');" /></td>';
+                    
+                    //Checkbox privilege
+                    //~ alert(JSON.stringify(res[2][z]))
+                    f += '<tr></tr></table>';
+                    
+                    f += '<div id="setUser'+res[2][z]['id']+'"><table width=100%><tr>';
+                    for(var setUserP in res[1]) {
+                        var setUserChecked = '';
+                        if( res[2][z]['privilege'].indexOf(res[1][setUserP]['id'].toString())> -1 ){setUserChecked = 'checked="checked"';}
+                        
+                        f += '<td>'+res[1][setUserP]['name'];
+                        f += '<div id="setU'+res[2][z]['id']+'"><input type="checkbox" id="setUserPrivilege'+res[2][z]['id']+'" name="setUserPrivilege" value="'+res[1][setUserP]['id']+'" '+ setUserChecked +' /></div></td>';
+                    }
+                    f += '</tr></table></td></tr>';
+                    //end checkbox
+                    f += '<tr><td colspan=10><hr></td></tr>'
+                }
+            }
+            f += '</table></div>';
+            f += '</form>';                  
             //~ alert(f);
+            //~ alert(JSON.stringify(res[1]));
             $("#form").html(f);
+        }
+        
+        function editUserSetup(id){
+            r = '';
+            r += 'id='+ $('#setUserForm').find('input[name="setUserId'+id+'"]').val();
+            r += ',username='+ $('#setUserForm').find('input[name="setUserUsername'+id+'"]').val();
+            r += ',name='+ $('#setUserForm').find('input[name="setUserName'+id+'"]').val();
+            r += ',surname='+ $('#setUserForm').find('input[name="setUserSurname'+id+'"]').val();
+            if($('#setUserForm').find('input[name="setUserPassword'+id+'"]').val()==='undefined'){alert('Inserisci la password');return;}
+            r += ',password='+ $('#setUserForm').find('input[name="setUserPassword'+id+'"]').val();
+            
+            var p = ',privilege=';
+            var k = 0;
+            $('#setUser'+id+' #setU'+id+'  input[type="checkbox"]:checked').each ( function() {
+                if(k > 0) {p +=';';}
+                p+=$(this).val();
+                k++;
+            });
+            r += p;
+            //~ alert(p);
+            //~ alert(r);
+            webiopi().callMacro("setUserSave", [e(r)] );
+        }
+        function addUserSetup(){
+            webiopi().callMacro("addUserSetup", '', getUserReload );
+        }
+        function delUserSetup(id){
+            webiopi().callMacro("delUserSetup", id , getUserReload);
+        }
+        var getUserReload = function (macro, args, response) {
+            getPage();
         }
         
         function setUserSave () {

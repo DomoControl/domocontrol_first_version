@@ -308,12 +308,17 @@ def getUser(args):
         return
     user_id = json.loads(args)
     q = "SELECT * FROM pi_user WHERE id = '%s'" %user_id
-    
     user = query(q)
-    q = "SELECT * FROM pi_privilege"
+    if user[0]['privilege'] != None and '4' in user[0]['privilege'].split(';'): #admin user
+        q = "SELECT * FROM pi_privilege"
+        qu= "SELECT id,username,name,surname,privilege FROM pi_user WHERE id <> %s" %user_id
+        user_all = query(qu)
+    else:
+        q = "SELECT * FROM pi_privilege where id <> 4"
+        user_all = ''
     privilege = query(q)
     
-    res = json.dumps([user,privilege]) 
+    res = json.dumps([user,privilege,user_all]) 
     #~ debug(res)
     return res 
 
@@ -331,6 +336,18 @@ def setUserSave(*args):
     debug(q)
     c = conn(q)
     #~ debug("query aggiornate: %s   " %c)
+
+@webiopi.macro 
+def addUserSetup():
+    q = "INSERT INTO pi_user (username,name,surname,password,privilege) VALUES ('new','newname','newsurname','newpassword',' ');"
+    debug(q)
+    conn(q)
+
+@webiopi.macro 
+def delUserSetup(*args):
+    q = "DELETE FROM pi_user WHERE id="+args[0]
+    #~ debug(q)
+    conn(q)
 
 @webiopi.macro             
 def setLogt(*args): #Da finire. Serve per tracciare l'IP
@@ -404,7 +421,6 @@ def langAdd(tag):
     q = "INSERT INTO pi_lang (tag,en,it) VALUES ('"+tag+"','"+tag+"','"+tag+"');"
     debug(q)
     conn(q)
-
 @webiopi.macro 
 def langDelete(*args):
     q = "DELETE FROM pi_lang WHERE id="+args[0]
