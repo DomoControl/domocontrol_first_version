@@ -294,9 +294,9 @@ def getMenuStatus(*args):
 @webiopi.macro             
 def setLogin(*args):
     #~ debug("%s  %s" %(args[0],args[1]))
-    q="SELECT id,username,name,surname,session,lang FROM pi_user WHERE username='%s' AND password='%s'" %(args[0],args[1])
+    q="SELECT id,username,name,surname,session,lang, privilege FROM pi_user WHERE username='%s' AND password='%s'" %(args[0],args[1])
+    debug(q)
     c = query(q)
-    #~ debug(q)
     if len(c) > 0:
         return json.dumps(c)    
     else:
@@ -392,7 +392,7 @@ def delAreaSave(*args):
 #Lang Setup
 @webiopi.macro             
 def getLang(*args):
-    q = "SELECT * FROM pi_lang ORDER BY tag"
+    q = "SELECT * FROM pi_lang ORDER BY id DESC"
     #~ debug(q)
     res = query(q)
     #~ debug(res)

@@ -32,8 +32,8 @@ h1 {background: #2952D8; color:white;}
 
 .status {margin-top:0;}
 
-.but {text-align:center;}
-.but input {height: 2em; font-size: 1.5em;}
+.but {text-align:center; margin:5px; padding:0px;}
+.but input {height: 1.5em; font-size: 1.0em;}
 
 .status {
     border: 1px dotted gray;

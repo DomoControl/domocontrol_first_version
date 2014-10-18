@@ -80,14 +80,12 @@
             //~ alert(name+' '+value);
             if(!value){name='page'; value='login';}
             if(name=='page'){
-                var now = new Date();
-                var time = now.getTime();
+                var date = new Date();
+                //~ var time = date.getTime();
                 //~ alerta(document.cookie);
                 var session_timeout = getCookies()['session_timeout'];
-                time += session_timeout * 1000;
-                now.setTime(time);
-                //~ alert(now.toUTCString())
-                document.cookie = name+"="+value + '; expires=' + now.toUTCString() + '; path=/';
+                date.setTime(date.getTime() + (session_timeout * 60 * 1000));
+                document.cookie = name+"="+value + '; expires=' + date.toUTCString() + '; path=/';
             } else {
                 document.cookie = name+"="+value;
             }
@@ -100,12 +98,15 @@
             var f = '<input type="button" name="help" value="?" onclick=(alert(\"'+help+'\")); class="textbox-300" />';
             return f;
         }
-            
+        
+        
+        
         //Sceglie quali pagine mostrare
         function getPage(id) {
             var title;
             var footer;
             var page = getCookies()['page'];
+            //~ setCookies('page',page);
             if(typeof(page) == 'undefined' || page == '""') {setCookies('page','login'); getPage(1);} //init if page is not set
             //~ alert(document.cookie);
             //~ alert(page);
@@ -123,7 +124,6 @@
                     f +=                '<p><label class="field" for="Password">'+L('password')+'</label><input id="password" type=password name="password" value="" required class="textbox-300"></p>';
                     f +=                '<p><label class="field" for="Entra">&nbsp;</label><input id="entra" type="button" name="entra" value="'+L('login')+'" onclick=Login();  class="textbox-300"></p>';
                     f +=            '</fieldset>';
-                    //~ f +=        '</div>';
                     f +=    '</form>';
                     $("#form").html(f);
                     break;
@@ -140,7 +140,7 @@
                     //~ alert('MenuSetup');
                     title = '<small>'+L('status')+'</small>';
                     footer = '<span><input type="button" name="footer" value="'+L('logout')+'" onclick=LogOut() ></span>' ;
-                    footer += '<input type="button" name="setup" value="Menu" onclick="setCookies(\'page\',\'menu\'); getPage(1)" >';
+                    footer += '<input type="button" name="setup" value="Menu" onclick="setCookies(\'page\',\'menu\'); stopInterval(); getPage(1)" >';
                     footer += '<span>'+L('welcome')+' ' + getCookies()["username"] + '</span>'; 
                     stopInterval();
                     startStatus();
@@ -302,6 +302,7 @@
         
         var getMenuStatus = function (macro, args, response) {
                 //~ alert(response);
+                var text = '';
                 if(response=='uguale'){
                     f = status;
                 }
@@ -315,8 +316,21 @@
 						f += "<tr><td id='title'colspan=5>"+d(res['program'][r]['description'])+"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+d(res['type'][res['program'][r]['type_id']]['name'])+"</td></tr>";    
 						f += "<tr><td>"+d(res['board_io'][res['program'][r]['in_id']]['description'])+"</td><td>Inverted</td><td>Delay</td><td>"+d(res['board_io'][res['program'][r]['out_id']]['description'])+"</td><td>Edit</td></tr>";
                         
-						if(res['program'][r]['IN'] == 1){var in_image = 'in_off.png'}else{var in_image = 'in_on.png'}
-						f += "<td><input type='image' src='./images/"+in_image+"' width='60px' name='IN' value='"+res['program'][r]['IN']+"' onclick='invertInput("+r+")' />";
+                        //Input
+                        if(res['program'][r]['IN'] == 1 && res['board_io'][res['program'][r]['in_id']]['address'] > '0'){
+                            f += '<td><img src="./images/in_off.png" width="60px" />';
+                        }
+                        else if((res['program'][r]['IN'] == 0 && res['board_io'][res['program'][r]['in_id']]['address'] > '0')){
+                            f += '<td><img src="./images/in_on.png" width="60px" />';
+                        }
+                        else if((res['program'][r]['IN'] == 1 && res['board_io'][res['program'][r]['in_id']]['address'] == '0')){
+                            f += '<td><input type="image" src="./images/in_push_off.png" width="60px" name="IN" value="'+res['program'][r]['IN']+'" onclick=\'invertInput('+r+')\'; />';
+                        }
+                        else if((res['program'][r]['IN'] == 0 && res['board_io'][res['program'][r]['in_id']]['address'] == '0')){
+                            f += '<td><input type="image" src="./images/in_push_on.png" width="60px" name="IN" value="'+res['program'][r]['IN']+'" onclick=\'invertInput('+r+')\'; />';
+                        }
+                        
+						
                         //Show timer conter
                         if(res['program'][r]['type_id'] == 2){
                             if('TIMER' in res['program'][r]){f += "<br>"+res['program'][r]['TIMER']+" sec";}
@@ -342,7 +356,7 @@
                 
 				}
                 
-                //~ $("#message").html(response); 
+                //~ $("#message").html(text); 
                 //~ alert(status);
                 $("#form").html(f); 
                 
@@ -360,10 +374,11 @@
         //verifica se le credenziali sono corrette
         function Login() {
             if($("#username").val() && $("#password").val()) {
+                //~ alert([$("#username").val(),$("#password").val()]);
                 webiopi().callMacro("setLogin", [$("#username").val(),$("#password").val()], setLogin);
             }
             else {
-                alert("Inserisci i campi Username e Password");
+                alert(L('insert_username_and_password'));
             }
         } 
         
@@ -380,6 +395,9 @@
                 setCookies('surname',res['surname'],1);
                 setCookies('session_timeout',res['session'],1);
                 setCookies('language',res['lang'],1);
+                
+                var privilege = res['privilege'].split(';');
+                if( privilege.indexOf('4') > -1){setCookies('administrator','yes');}else{setCookies('administrator','no');}
                 getPage();
             }
         }
@@ -392,6 +410,7 @@
             document.cookie = "surname=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
             document.cookie = "session_timeout=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
             document.cookie = "lang=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+            document.cookie = "administrator=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
             setCookies('page','login');
             //~ alert(getCookies()['page']);
             getPage();
@@ -438,13 +457,13 @@
             //end checkbox
             f +=            '<tr><td>&nbsp;</td><td><input id="valida" type="button" name="'+L('save')+'" value="Save" onclick=setUserSave();  class="textbox-300">';
             if(admin=='yes'){
-                f += '<input type="button" id="add" name="add" value="Add user" onclick="addUserSetup();"; /></td></tr>';
+                f += '<input type="button" id="add" name="add" value="'+L('add_user')+'" onclick="addUserSetup();"; /></td></tr>';
             }else{f += '</td></tr>';}
             f += '</table>';
             
             if(admin=='yes'){
-                f += '<table width=100% style="border:1px solid gray;"><caption style="font-weight:bold; background-color:#2952D8; color:white; margin-top:20px;">'+L('users_privileges')+'</caption>';
-                f += '<tr><th>username</th><th>Name</th><th>Surname</th><th>Password</th><th>Edit</th></tr>';
+                f += '<table width=100% ><caption style="font-weight:bold; background-color:#2952D8; color:white; margin-top:20px;">'+L('users_privileges')+'</caption>';
+                f += '<tr><th>'+L('username')+'</th><th>'+L('name')+'</th><th>'+L('surname')+'</th><th>'+L('password')+'</th><th></th></tr>';
                 for(var z in res[2]) {
                     f += '<input type="hidden" id="setUserId'+res[2][z]['id']+'" name="setUserId'+res[2][z]['id']+'" value="'+res[2][z]['id']+'" />';
                     f += '<tr><td><input style="width:60px;" type="text" id="setUserUsername'+res[2][z]['id']+'" name="setUserUsername'+res[2][z]['id']+'" value="'+res[2][z]['username']+'" /></td>';
@@ -463,7 +482,7 @@
                         var setUserChecked = '';
                         if( res[2][z]['privilege'].indexOf(res[1][setUserP]['id'].toString())> -1 ){setUserChecked = 'checked="checked"';}
                         
-                        f += '<td>'+res[1][setUserP]['name'];
+                        f += '<td>'+L(res[1][setUserP]['name']);
                         f += '<div id="setU'+res[2][z]['id']+'"><input type="checkbox" id="setUserPrivilege'+res[2][z]['id']+'" name="setUserPrivilege" value="'+res[1][setUserP]['id']+'" '+ setUserChecked +' /></div></td>';
                     }
                     f += '</tr></table></td></tr>';
@@ -953,8 +972,8 @@
                 f += '<option value="'+res['program'][r]['id']+'" '+selected+' >'+ d(res['program'][r]['name']) +' '+d(res['program'][r]['description'])+'</option>';
             }
             f += '</select>';
-            f += '<input type="button" name="edit" value="Edit" onclick="setCookies(\'page\',\'programSetup\'); editProgramSetup();" />';
-            f += '<input type="button" id="add" name="add" value="Add program" onclick="addProgramSetup();"; />';
+            f += '<input type="button" name="edit" value="'+L('edit')+'" onclick="setCookies(\'page\',\'programSetup\'); editProgramSetup();" />';
+            f += '<input type="button" id="add" name="add" value="'+L('add_program')+'" onclick="addProgramSetup();"; />';
             f += '</center></form>';
             $("#form").html(f);
         }
@@ -975,11 +994,11 @@
             var res = $.parseJSON(response);
             window.globalVar = res;
             var f = "";
-            f += "<form name='ProgramSetupForm' id='ProgramSetupForm'>"; 
-            f += "<table width=100%><tr><td id='title' colspan=2>Program Setup n."+res['program'][0]['id']+"  "+ d(res['program'][0]['name']) + "</td></tr>";
-            f += "<input id='id' type='hidden' name='id' value='"+ res['program'][0]['id'] +"' />";
-            f += "<tr><td>Name: <input type='text' id='name' name='name' value='"+d(res['program'][0]['name'])+"' size='8' title='Name of program' /></td>";
-            f += "<td>Description: <input type='text' id='description' name='description' value='"+d(res['program'][0]['description'])+"' size='10' title='Description of program' /></td>";
+            f += '<form name="ProgramSetupForm" id="ProgramSetupForm">'; 
+            f += '<table width=100%><tr><td id="title" colspan=2>'+L('program_Setup_n.')+' '+res['program'][0]['id']+'  '+ L(res['program'][0]['name']) + '</td></tr>';
+            f += '<input id="id" type="hidden" name="id" value="'+ res['program'][0]['id'] +'" />';
+            f += '<tr><td>Name: <input type="text" id="name" name="name" value="'+d(res['program'][0]['name'])+'" size=8 title="Name of program" /></td>';
+            f += '<td>Description: <input type="text" id="description" name="description" value="'+d(res['program'][0]['description'])+'" size=10 title="Description of program" /></td>';
             
             var enable='';
             if(res['program'][0]['enable'] == 1) {enable='checked=checked';}
@@ -994,8 +1013,8 @@
             }
             f += '</select></td></tr></table>'; 
             
-            f += "<table width=100% style='border:1px solid gray; margin:5px; padding: 5px;' ><tr><td>Input</td><td>Inv.</td><td>Delay</td><td>Output</td><td>Save</td><td>Delete</td></tr>";
-            f += "<tr><td>";
+            f += '<table width=100% style="border:1px solid gray; margin:5px; padding: 5px;" ><tr><td>Input</td><td>Inv.</td><td>Delay</td><td>Output</td><td>Save</td><td>Delete</td></tr>';
+            f += '<tr><td>';
             
             f += '<select id="in" name="in" title="Select Input" >';
             for(r in res['in']) {
