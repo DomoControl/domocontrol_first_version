@@ -33,7 +33,7 @@ h1 {background: #2952D8; color:white;}
 .status {margin-top:0;}
 
 .but {text-align:center; margin:5px; padding:0px;}
-.but input {height: 1.5em; font-size: 1.0em;}
+.but input {height: 1.5em; font-size: 1.0em; width:200px;}
 
 .status {
     border: 1px dotted gray;

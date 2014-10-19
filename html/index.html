@@ -6,18 +6,8 @@
     <title>Domus Control</title>
     <link href="./css/style.css" rel="stylesheet" type="text/css">
     <script type="text/javascript" src="/webiopi.js"></script>
-    <!-- <script type="text/javascript" src="/jquery.js"></script> -->
-    <!-- <script language="Javascript" src="http://www.codehelper.io/api/ips/?js"></script>  -->
     <script type="text/javascript"> 
-
         var Interval = null; 
-        var userID= '';
-        var username = '';
-        var name = '';
-        var surname = '';
-        var page = '';
-        var LANG;
-        var status;
 
         //Ciclo principale
         webiopi().ready(function(){
@@ -74,15 +64,15 @@
             }	  
             return cookies;   
         }                
-
+        
+        //Return datetime
+        function NOW(){return new Date();}
+        
         //Set Cookie
         function setCookies(name,value,id){
-            //~ alert(name+' '+value);
             if(!value){name='page'; value='login';}
             if(name=='page'){
-                var date = new Date();
-                //~ var time = date.getTime();
-                //~ alerta(document.cookie);
+                var date = NOW();
                 var session_timeout = getCookies()['session_timeout'];
                 date.setTime(date.getTime() + (session_timeout * 60 * 1000));
                 document.cookie = name+"="+value + '; expires=' + date.toUTCString() + '; path=/';
@@ -103,20 +93,18 @@
         
         //Sceglie quali pagine mostrare
         function getPage(id) {
-            var title;
-            var footer;
+            var title=''; var footer='';
             var page = getCookies()['page'];
             //~ setCookies('page',page);
             if(typeof(page) == 'undefined' || page == '""') {setCookies('page','login'); getPage(1);} //init if page is not set
             //~ alert(document.cookie);
-            //~ alert(page);
             logt(page); //Send LOG
             if (page != 'menuStatus'){stopInterval();}    
             switch(page) {
                 case 'login':
                     //~ alert('Login');
-                    title = '<small>'+L('login')+'</small>';
-                    footer = '<span>'+L('insert_username_and_password')+'</span>';
+                    title += '<small>'+L('login')+'</small>';
+                    footer += '<span>'+L('insert_username_and_password')+'</span>';
                     var f = '<form id="login">';
                     f +=            '<fieldset>';
                     f +=                '<p><center>'+L('login_message')+'</center></p>'
@@ -129,8 +117,8 @@
                     break;
                 case 'menu':
                     //~ alert('Menu');
-                    title = '<small>Menu</small>'
-                    footer = '<span><input type="button" name="footer" value="'+L('logout')+'" onclick=LogOut() ></span>' ;
+                    title += '<small>Menu</small>'
+                    footer += '<span><input type="button" name="footer" value="'+L('logout')+'" onclick=LogOut() ></span>' ;
                     footer += '<span>'+L('welcome')+' ' + getCookies()["username"] + '</span>';   
                     $("#form").html('<p class="but"><input type="button" name="status" value="Status" onclick="setCookies(\'page\',\'menuStatus\'); getPage(1)" ></p>' +
                         '<p class="but"><input type="button" name="setup" value="Setup" onclick="setCookies(\'page\',\'menuSetup\');getPage(1)" ></p>');                  
@@ -138,8 +126,8 @@
                     break;
 				case 'menuStatus':
                     //~ alert('MenuSetup');
-                    title = '<small>'+L('status')+'</small>';
-                    footer = '<span><input type="button" name="footer" value="'+L('logout')+'" onclick=LogOut() ></span>' ;
+                    title += '<small>'+L('status')+'</small>';
+                    footer += '<span><input type="button" name="footer" value="'+L('logout')+'" onclick=LogOut() ></span>' ;
                     footer += '<input type="button" name="setup" value="Menu" onclick="setCookies(\'page\',\'menu\'); stopInterval(); getPage(1)" >';
                     footer += '<span>'+L('welcome')+' ' + getCookies()["username"] + '</span>'; 
                     stopInterval();
@@ -150,14 +138,15 @@
                     break;
                 case 'menuSetup':
                     //~ alert('MenuSetup');
-                    title = '<small>'+L('setup')+'</small>';
-                    footer = '<span><input type="button" name="footer" value="'+L('logout')+'" onclick=LogOut() ></span>' ;
+                    title += '<small>'+L('setup')+'</small>';
+                    footer += '<span><input type="button" name="footer" value="'+L('logout')+'" onclick=LogOut() ></span>' ;
                     footer += '<span><input type="button" name="footer" value="'+L('main_menu')+'" onclick="setCookies(\'page\',\'menu\');getPage(1)" ></span>' ;
                     footer += '<span>'+L('welcome')+' ' + getCookies()["username"] + '</span>';   
                     $("#form").html( '<p class="but"><input type="button" name="setup" value="User Setup" onclick="setCookies(\'page\',\'userSetup\');getPage(1)" ></p>' +
                         '<p class="but"><input type="button" name="setup" value="Area Setup" onclick="setCookies(\'page\',\'areaSetup\');getPage(1)" ></p>' +
                         '<p class="but"><input type="button" name="setup" value="Group Privilege" onclick="setCookies(\'page\',\'privilegeSetup\');getPage(1)" ></p>' +
                         '<p class="but"><input type="button" name="setup" value="Lang Setup" onclick="setCookies(\'page\',\'langSetup\');getPage(1)" ></p>' +
+                        '<p class="but"><input type="button" name="setup" value="Board Type" onclick="setCookies(\'page\',\'boardTypeSetup\');getPage(1)" ></p>' +
                         '<p class="but"><input type="button" name="setup" value="Board Setup" onclick="setCookies(\'page\',\'boardSetup\');getPage(1)" ></p>' +
                         '<p class="but"><input type="button" name="setup" value="Input Setup" onclick="setCookies(\'page\',\'inputSetup\');getPage(1)" ></p>' +
                         '<p class="but"><input type="button" name="setup" value="Type Setup" onclick="setCookies(\'page\',\'typeSetup\');getPage(1)" ></p>' +
@@ -167,8 +156,8 @@
                     break;
                 case 'userSetup':
                     //~ alert('UserSetup');
-                    title = '<small>User Setup</small>';
-                    footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
+                    title += '<small>User Setup</small>';
+                    footer += '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                     footer += '<input type="button" name="setup" value="Menu Setup" onclick="setCookies(\'page\',\'menuSetup\');getPage(1)" >';
                     footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                     //~ alert(getCookies()['user_id'] + document.cookie);
@@ -178,8 +167,8 @@
                     break;                        
                 case 'areaSetup':
                     //~ alert('AreaSetup');
-                    title = '<small>Area Setup</small>';
-                    footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
+                    title += '<small>Area Setup</small>';
+                    footer += '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                     footer += '<input type="button" name="setup" value="Menu Setup" onclick="setCookies(\'page\',\'menuSetup\');getPage(1)" >';
                     footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                     webiopi().callMacro("setArea", '' , setArea);
@@ -188,8 +177,8 @@
                     break;  
                 case 'langSetup':
                     //~ alert('AreaSetup');
-                    title = '<small>Lang Setup</small>';
-                    footer = '<span><input type="button" name="footer" value="LogOut" onclick="LogOut();getPage();" ></span>' ;
+                    title += '<small>Lang Setup</small>';
+                    footer += '<span><input type="button" name="footer" value="LogOut" onclick="LogOut();getPage();" ></span>' ;
                     footer += '<input type="button" name="setup" value="Menu Setup" onclick="setCookies(\'page\',\'menuSetup\');getPage(1)" >';
                     footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                     webiopi().callMacro("getLang", '' , getLang);
@@ -198,8 +187,8 @@
                     break;
                 case 'privilegeSetup':
                     //~ alert('PrivilegeSetup');
-                    title = '<small>Group Privileges</small>';
-                    footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
+                    title += '<small>Group Privileges</small>';
+                    footer += '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                     footer += '<input type="button" name="setup" value="Menu Setup" onclick="setCookies(\'page\',\'menuSetup\');getPage(1)" >';
                     footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                     webiopi().callMacro("setPrivilege", '' , setPrivilege);
@@ -208,18 +197,28 @@
                     break;   
                 case 'inputSetup':
                     //~ alert('InputSetup');
-                    title = '<small>Input Setup</small>';
-                    footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
+                    title += '<small>Input Setup</small>';
+                    footer += '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                     footer += '<input type="button" name="setup" value="Menu Setup" onclick="setCookies(\'page\',\'menuSetup\');getPage(1)" >';
                     footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                     webiopi().callMacro("setInputSetup", '' , setInputSetup);
                     $("#form").html('');
                     $("#form1").html('');
-                    break;  
+                    break; 
+                case 'boardTypeSetup':
+                    //~ alert('BoardType');
+                    title += '<small>Board Type Setup</small>';
+                    footer += '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
+                    footer += '<input type="button" name="setup" value="Menu Setup" onclick="setCookies(\'page\',\'menuSetup\');getPage(1)" >';
+                    footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
+                    webiopi().callMacro("boardTypeSetup", '' , boardTypeSetup);
+                    $("#form").html('');
+                    $("#form1").html('');
+                    break; 
                 case 'boardSetup':
                     //~ alert('BoardSetup');    
-                    title = '<small>Board Setup</small>';
-                    footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
+                    title += '<small>Board Setup</small>';
+                    footer += '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                     footer += '<input type="button" name="setup" value="Menu Setup" onclick="setCookies(\'page\',\'menuSetup\');getPage(1)" >';
                     footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                     webiopi().callMacro("setBoardSetup", '' , setBoardSetup);
@@ -228,8 +227,8 @@
                     break;                        
                 case 'boardIOSetup':
                     //~ alert('*****BoardIOSetup*****');
-                    title = '<small>Board IO Setup</small>';
-                    footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
+                    title += '<small>Board IO Setup</small>';
+                    footer += '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                     footer += '<input type="button" name="setup" value="Menu Setup" onclick="setCookies(\'page\',\'menuSetup\');getPage(1)" >';
                     footer += '<input type="button" name="setup" value="Board Setup" onclick="setCookies(\'page\',\'boardSetup\');getPage(1)" >';
                     footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
@@ -239,8 +238,8 @@
                     break;   
                 case 'areaSetup':
                     //~ alert('AreaSetup');
-                    title = '<small>Area Setup</small>';
-                    footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
+                    title += '<small>Area Setup</small>';
+                    footer += '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                     footer += '<input type="button" name="setup" value="Menu Setup" onclick="setCookies(\'page\',\'menuSetup\');getPage(1)" >';
                     footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                     $("#form").html('');
@@ -248,8 +247,8 @@
                     break;
                 case 'typeSetup':
                     //~ alert('TypeSetup');    
-                    title = '<small>Type Function Setup</small>';
-                    footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
+                    title += '<small>Type Function Setup</small>';
+                    footer += '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                     footer += '<input type="button" name="setup" value="Menu Setup" onclick="setCookies(\'page\',\'menuSetup\');getPage(1)" >';
                     footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                     webiopi().callMacro("setType", '' , setType);
@@ -258,8 +257,8 @@
                     break;
                 case 'programSetup':
                     //~ alert('ProgramSetup');    
-                    title = '<small>Program Setup</small>';
-                    footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
+                    title += '<small>Program Setup</small>';
+                    footer += '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                     footer += '<input type="button" name="setup" value="Menu Setup" onclick="setCookies(\'page\',\'menuSetup\');getPage(1)" >';
                     footer += '<input type="button" name="setup" value="Menu Status" onclick="setCookies(\'page\',\'menuStatus\');getPage(1)" >';
                     footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
@@ -268,8 +267,8 @@
                     break;                        
                 case 'email-smsSetup':
                     //~ alert('EmailSetup');
-                    title = '<small>Email - SMS Setup</small>';
-                    footer = '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
+                    title += '<small>Email - SMS Setup</small>';
+                    footer += '<span><input type="button" name="footer" value="LogOut" onclick=LogOut() ></span>' ;
                     footer += '<input type="button" name="setup" value="Menu Setup" onclick="setCookies(\'page\',\'menuSetup\');getPage(1)" >';
                     footer += '<span>Benvenuto ' + getCookies()["username"] + '</span>';
                     $("#form").html('');
@@ -286,6 +285,7 @@
             if(getCookies()['language']=='en'){flag='<image src="images/en_flag.png" width="25px" />';}
             else{flag='<image src="images/it_flag.png" width="25px" />';}
             $("#title").html('<h1>'+L('domocontrol')+' - ' + title + ' '+ flag +'</h1>');
+            
             $("#footer").html(footer);
         }
         
@@ -301,8 +301,6 @@
         }
         
         var getMenuStatus = function (macro, args, response) {
-                //~ alert(response);
-                var text = '';
                 if(response=='uguale'){
                     f = status;
                 }
@@ -313,36 +311,63 @@
 					var f = "<div class='status'><table width=100%>";
                     
 					for(r in res['program']){
+                        //~ text += JSON.stringify(res['program'][r]['in_id']);
 						f += "<tr><td id='title'colspan=5>"+d(res['program'][r]['description'])+"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+d(res['type'][res['program'][r]['type_id']]['name'])+"</td></tr>";    
 						f += "<tr><td>"+d(res['board_io'][res['program'][r]['in_id']]['description'])+"</td><td>Inverted</td><td>Delay</td><td>"+d(res['board_io'][res['program'][r]['out_id']]['description'])+"</td><td>Edit</td></tr>";
                         
                         //Input
-                        if(res['program'][r]['IN'] == 1 && res['board_io'][res['program'][r]['in_id']]['address'] > '0'){
+                        if(res['program'][r]['type_id'] == 3 ){
+                            f += '<td>';
+                        }
+                        if(res['program'][r]['type_id'] != 3 && res['program'][r]['IN'] == 1 && res['board_io'][res['program'][r]['in_id']]['address'] > '0'){
                             f += '<td><img src="./images/in_off.png" width="60px" />';
                         }
-                        else if((res['program'][r]['IN'] == 0 && res['board_io'][res['program'][r]['in_id']]['address'] > '0')){
+                        else if(res['program'][r]['type_id'] != 3 && res['program'][r]['IN'] == 0 && res['board_io'][res['program'][r]['in_id']]['address'] > '0'){
                             f += '<td><img src="./images/in_on.png" width="60px" />';
                         }
-                        else if((res['program'][r]['IN'] == 1 && res['board_io'][res['program'][r]['in_id']]['address'] == '0')){
+                        else if(res['program'][r]['type_id'] != 3 && res['program'][r]['IN'] == 1 && res['board_io'][res['program'][r]['in_id']]['address'] == '0'){
                             f += '<td><input type="image" src="./images/in_push_off.png" width="60px" name="IN" value="'+res['program'][r]['IN']+'" onclick=\'invertInput('+r+')\'; />';
                         }
-                        else if((res['program'][r]['IN'] == 0 && res['board_io'][res['program'][r]['in_id']]['address'] == '0')){
+                        else if(res['program'][r]['type_id'] != 3 && res['program'][r]['IN'] == 0 && res['board_io'][res['program'][r]['in_id']]['address'] == '0'){
                             f += '<td><input type="image" src="./images/in_push_on.png" width="60px" name="IN" value="'+res['program'][r]['IN']+'" onclick=\'invertInput('+r+')\'; />';
                         }
                         
-						
-                        //Show timer conter
-                        if(res['program'][r]['type_id'] == 2){
+                        if(res['program'][r]['type_id'] == 2){ //Show timer conter
                             if('TIMER' in res['program'][r]){f += "<br>"+res['program'][r]['TIMER']+" sec";}
                             else{
                                 t = res['program'][r]['timer'].split(';');
                                 f += "<br>D:h:m:s "+t[0]+":"+t[1]+":"+t[2]+":"+t[3];
                             }
                         }
+                        else if(res['program'][r]['type_id'] == 3){ //Show CHRONO
+                            t = res['program'][r]['chrono'].split(';');
+                            t = t.filter(function(n){ return n != ""});
+                            //~ alert(JSON.stringify(t))
+                            var tc='From - To<br>';                            
+                            for(rc in t){
+                                var cfh = t.shift();
+                                var cfm = t.shift();
+                                var cfs = t.shift();
+                                var cth = t.shift();
+                                var ctm = t.shift();
+                                var cts = t.shift();
+                                
+                                tc += (cfh.length < 2 ? '0':'') + cfh +':' + (cfm.length < 2 ? '0':'') + cfm +':' + (cfs.length < 2 ? '0':'') + cfs + ' - ';
+                                tc += (cth.length < 2 ? '0':'') + cth +':' + (ctm.length < 2 ? '0':'') + ctm +':' + (cts.length < 2 ? '0':'') + cts;
+                                tc += '<br>';
+                                //~ tc += 'From:'+t.shift()+':'+t.shift()+':'+t.shift()+' to:'+t.shift()+':'+t.shift()+':'+t.shift()+'<br>';
+                            }
+                            
+                            //~ var myNumber = 7;
+                            //~ ("0" + myNumber).slice(-2);
+                            
+                            
+                            f += tc;
+                        }
                         f += "</td>";
                     
-						if(res['program'][r]['in_inverted'] == 1){var check = 'checked';} else {var check = '';}
-						f += "<td><input type='checkbox' name='in_inverted' "+check+" /></td>";
+						if(res['program'][r]['inverted'] == 1){var check = 'checked';} else {var check = '';}
+						f += "<td><input type='checkbox' name='inverted' "+check+" /></td>";
 						f += "<td>"+res['program'][r]['in_delay']+"</td>";
                     
 						if(res['program'][r]['OUT'] == 1){var out_image = 'out_on.png'}else{var out_image = 'out_off.png'}
@@ -355,9 +380,9 @@
                     status = f;	
                 
 				}
-                
-                //~ $("#message").html(text); 
-                //~ alert(status);
+                now = NOW();
+                now = now.toLocaleFormat('%H:%M:%S');
+                $("#datetime").html(now);
                 $("#form").html(f); 
                 
         }
@@ -562,24 +587,19 @@
         var setArea = function (macro, args, response) {
             res = eval(response);
             var f = '<form name="setUserForm" id="setAreaForm">';
-            f +=    '<div class="fieldSet">';
-            f +=        '<fieldset>';
-            f +=            '<legend>Form Area</legend>';
-            f +=            '<table class="f-h" align=center><tr><th>ID</th><th>Name</th><th>Description</th><th></th></tr>';
+            f +=    '<table align=center width=100%><tr><th>Name</th><th>Description</th><th></th></tr>';
             for (r in res) {
-                //~ $("#text").html(r + ' - ' + res[r]['name'] + '<br>'); 
                 f += '<input type="hidden" name="id['+ res[r]['id'] +']" value="'+ res[r]['id'] +'" />';
-                f += '<td><input type="text" name="name['+ res[r]['id'] +']" value="'+ res[r]['name'] +'"  /></td>';
-                f += '<td><input type="text" name="description['+ res[r]['id'] +']" value="'+ res[r]['description'] +'"  /></td>';
-                f += '<td><input type="button" id="valida" name="valida" value="Save" onclick=setAreaSave(res[r]["id"]); /> ';
-                f += '<input type="button" id="delete" name="delete" value="Delete" onclick=delAreaSave(res[r]["id"]); /> ';
+                f += '<td><input type="text" name="name['+ res[r]['id'] +']" value="'+ res[r]['name'] +'" style="width:100px;" /></td>';
                 
+                f += '<td><input type="text" name="description['+ res[r]['id'] +']" value="'+ L(res[r]['description']) +'"  /></td>';
+                
+                f += '<td><input type="button" id="valida" name="valida" value="'+L('save')+'" onclick=setAreaSave(res[r]["id"]); /> ';
+                f += '<input type="button" id="delete" name="delete" value="'+L('delete')+'" onclick=delAreaSave(res[r]["id"]); /> ';
                 f += '</td></tr>';
             }
-            f += '<tr><td colspan=3><input type="button" id="add" name="add" value="Add" onclick=setAreaAdd(); /></td></tr> ';                
+            f += '<tr><td colspan=3><input type="button" id="add" name="add" value="'+L('add')+'" onclick=setAreaAdd(); /></td></tr> ';                
             f +=        '</table>';
-            f +=        '</fieldset>';
-            f +=    '</div>';
             f += '</form>'; 
             $("#form").html(f);
         }
@@ -826,27 +846,89 @@
         }
         //Fine pagina Type Function
 
+        //Pagine boardTypeSetup
+        var boardTypeSetup = function (macro, args, response) {
+            res = eval(response);
+            var f = '<form name="boardTypeForm" id="boardTypeForm">';
+            f +=    '<table class="f-h" align=center><tr><th>ID</th><th>Name</th><th>Description</th><th></th></tr>';
+            for (r in res) {
+                //~ $("#text").html(r + ' - ' + res[r]['name'] + '<br>'); 
+                f += '<input type="hidden" name="id['+ res[r]['id'] +']" value="'+ res[r]['id'] +'" />';
+                f += '<td><input type="text" name="name['+ res[r]['id'] +']" value="'+ res[r]['name'] +'" style="width:100px;"  /></td>';
+                f += '<td><input type="text" name="description['+ res[r]['id'] +']" value="'+ L(res[r]['description']) +'"  /></td>';
+                f += '<td><input type="button" id="valida" name="valida" value="Save" onclick=saveBoardType('+res[r]["id"]+'); /> ';
+                f += '<input type="button" id="delete" name="delete" value="Delete" onclick=delBoardType(res[r]["id"]); /> ';
+                
+                f += '</td></tr>';
+            }
+            f += '<tr><td colspan=3><input type="button" id="add" name="add" value="Add" onclick=addBoardType(); /></td></tr> ';                
+            f +=        '</table>';
+            f +=        '</fieldset>';
+            f +=    '</div>';
+            f += '</form>'; 
+            $("#form").html(f);
+        }
+        
+        function saveBoardType(id) {
+            var r = '';
+            r += 'id='+$('#boardTypeForm').find('input[name="id['+id+']"]').val();
+            r += ',name='+$('#boardTypeForm').find('input[name="name['+id+']"]').val();
+            r += ',description='+$('#boardTypeForm').find('input[name="description['+id+']"]').val();
+            webiopi().callMacro("saveBoardType", [r] , saveBoardType1);
+        }
+        
+        function saveBoardType1() {
+            setCookies('page','boardTypeSetup');
+            getPage(1);
+        }
+        
+        function delBoardType(x) {
+            webiopi().callMacro("delBoardType", [x] );
+            setCookies('page','boardTypeSetup');
+            getPage(1);
+        }
+        
+        function addBoardType(){
+            webiopi().callMacro("addBoardType",  '' );
+            setCookies('page','boardTypeSetup');
+            getPage(1);
+        }
+        //Fine pagina boardTypeSetup
+
+
+
         //Begin Board Setup
         var setBoardSetup = function (macro, args, response) {
             //~ alert(response);
-            res = eval(response);
+            res = $.parseJSON(response);
+            //~ res = eval(response);
             var f = '<form name="setBoardSetupForm" id="setBoardSetupForm">';
-            f +=            '<table class="f-h" align=center><tr><th>Name</th><th>Description</th><th title="Board Address">Add</th><th title="Enable">BT</th><th>En</th><th>Save</th><th>IO</th></tr>';
-            for (r in res) {                    
-                f += '<input type="hidden" name="id['+ res[r]['id'] +']" value="'+ res[r]['id'] +'" />';
-                f += '<td><input type="text" size="4" name="name['+ res[r]['id'] +']" value="'+ d(res[r]['name']) +'" /></td>';
-                f += '<td><input type="text" size="12" name="description['+ res[r]['id'] +']" value="'+ d(res[r]['description']) +'"  /></td>';
-                f += '<td><input type="text" size="1" name="address['+ res[r]['id'] +']" value="'+ res[r]['address'] +'"  /></td>';
-                f += '<td><input type="text" size="1" name="board_type['+ res[r]['id'] +']" value="'+ res[r]['board_type'] +'" title="Board Type: 1-I2C 2-RS485" /></td>';
-                var checked = '';
-                if (res[r]['enable'] == 1) {checked = 'checked="checked"'; }
+            f +=            '<table class="f-h" align=center><tr><th>Name</th><th>Description</th><th title="Board Address">Add</th><th title="Board Type">Type</th><th title="Board Enable">En</th><th>Save</th><th>IO</th></tr>';
+            for (r in res['board']) {            
+                //~ alert(res['board'][r]['name']);
+                f += '<input type="hidden" name="id['+ res['board'][r]['id'] +']" value="'+ res['board'][r]['id'] +'" />';
+                f += '<td><input type="text" size="4" name="name['+ res['board'][r]['id'] +']" value="'+ d(res['board'][r]['name']) +'" /></td>';
+                f += '<td><input type="text" size="12" name="description['+ res['board'][r]['id'] +']" value="'+ d(res['board'][r]['description']) +'"  /></td>';
+                f += '<td><input type="text" size="1" name="address['+ res['board'][r]['id'] +']" value="'+ res['board'][r]['address'] +'"  /></td>';
                 
-                f += '<td><input type="checkbox" id="enable'+res[r]['id']+'" name="enable['+ res[r]['id'] +']" value="'+ res[r]['enable'] +'" '+checked+'  /></td>';
-                f += '<td><input type="button" id="valida" name="valida" value="Save" onclick=setBoardSetupSave('+res[r]["id"]+'); /></td>';
-                f += '<td><input type="button" id="addBoardIOSetupEdit" name="edit" value="Edit" onclick="setCookies(\'page\',\'boardIOSetup\','+res[r]['id']+'); setCookies(\'board_id\','+res[r]['id']+'); getPage('+res[r]['id']+');" /></td>';
+                f += '<td><select id="board_type" name="board_type['+ res['board'][r]['id'] +']" title="Select Board Type" >';
+                var sel = '';
+                for(bo in res['board_type']) {
+                    var selected = '';
+                    if( res['board'][r]['board_type'] == res['board_type'][bo]['id'] ){selected='selected=selected'; }
+                    f += '<option value="'+res['board_type'][bo]['id']+'" '+selected+' >'+ res['board_type'][bo]['name'] +'</option>';
+                }
+                f += '</select></td>';
+                
+                var checked = '';
+                if (res['board'][r]['enable'] == 1) {checked = 'checked="checked"'; }
+                
+                f += '<td><input type="checkbox" id="enable'+res['board'][r]['id']+'" name="enable['+ res['board'][r]['id'] +']" value="'+ res['board'][r]['enable'] +'" '+checked+'  /></td>';
+                f += '<td><input type="button" id="valida" name="valida" value="Save" onclick=setBoardSetupSave('+res['board'][r]["id"]+'); /></td>';
+                f += '<td><input type="button" id="addBoardIOSetupEdit" name="edit" value="Edit" onclick="setCookies(\'page\',\'boardIOSetup\','+res['board'][r]['id']+'); setCookies(\'board_id\','+res['board'][r]['id']+'); getPage('+res['board'][r]['id']+');" /></td>';
                 f += '</tr>';
             }
-            f +=            '<tr><td colspan=6><input type="button" id="add" name="add" value="Add" onclick="addBoardSetup();"; /></td></tr> ';
+            //~ f +=            '<tr><td colspan=6><input type="button" id="add" name="add" value="Add" onclick="addBoardSetup();"; /></td></tr> ';
             f +=        '</table>';
             f += '</form>'; 
             //~ alert(f);
@@ -863,7 +945,11 @@
             r += ',address='+$('#setBoardSetupForm').find('input[name="address['+id+']"]').val();
             var enable = $('#enable'+id).is(':checked') ? 1 : 0;
             r += ',enable=' + enable;
-            r += ',board_type='+$('#setBoardSetupForm').find('input[name="board_type['+id+']"]').val();
+            
+            var board_type_id = $('#setBoardSetupForm').find('select[name="board_type['+id+']"]').val() ;
+            //~ alert(board_type_id); 
+            r += ',board_type='+board_type_id ;
+            
             //~ alert(r); 
             webiopi().callMacro("setBoardSetupSave", [r] , setBoardSetupSave1);
         }
@@ -884,28 +970,31 @@
             var res = $.parseJSON(response);
             //~ alert(response);
             var bid = '';
-            var f = '';
+            
+            var f = '<form name="boardIOForm" id="boardIOForm"><table width=100%>';
             for(r in res['board_io']) {
                 
                 //mostra nome della board
                 if( res['board_io'][r]['bid'] != bid ) {
-                    f += '<p class="title">ID: '+res['board_io'][r]['bid']+ ' - Board name: ' +res['board_io'][r]['description']+'</p>';
+                    //~ <caption style="font-weight:bold; background-color:#2952D8; color:white; margin-top:20px;">'+L('users_privileges')+'</caption>';
+                    f += '<tr><th colspan=10 style="text-align:center; background-color:#2952D8; color:white; margin-top:20px;"> ID: '+res['board_io'][r]['bid']+ ' - Board name: ' +d(res['board_io'][r]['description'])+'</th></tr>';
+                    f += '<tr><th>Board</th><th>I/O</th><th>Name</th><th>Description</th><th title="Input address">Add.</th><th title="Input enable">En.</th><th></th></tr>';
                     bid = res['board_io'][r]['bid'];
                 }
-                f += '<div style="border:1px dashed gray; margin:5px; padding:5px;">';
-                f += '<form name="boardIOForm" id="boardIOForm'+res['board_io'][r]['id']+'">'; 
-                f += '<input id="id" type="hidden" name="id" value="'+ res['board_io'][r]['id'] +'" />';
+                //~ f += '<div style="border:1px dashed gray; margin:5px; padding:5px;">';
+                f += '<tr>'; 
+                f += '<td><input id="id'+res['board_io'][r]['id']+'" type="hidden" name="id'+res['board_io'][r]['id']+'" value="'+res['board_io'][r]['id']+'" />';
                 
-                f += '<select id="board_id" name="board_id" title="Select Board IO" >';
+                f += '<select id="board_id'+res['board_io'][r]['id']+'" name="board_id'+res['board_io'][r]['id']+'" title="Select Board IO" >';
                 var sel = '';
                 for(bo in res['board']) {
                     var selected = '';
                     if( res['board_io'][r]['board_id'] == res['board'][bo]['id'] ){selected='selected=selected';}
                     f += '<option value="'+res['board'][bo]['id']+'" '+selected+' >'+ res['board'][bo]['name'] +'</option>';
                 }
-                f += '</select>';
+                f += '</select></td>';
                 
-                f += '<select id="io_type_id" name="io_type_id" title="Select Input Type" >';
+                f += '<td><select id="io_type_id'+res['board_io'][r]['id']+'" name="io_type_id'+res['board_io'][r]['id']+'" title="Select Input Type" >';
                 var sel = '';
                 for(io in res['io']) {
                     
@@ -913,36 +1002,36 @@
                     if( res['board_io'][r]['io_type_id'] == res['io'][io]['id'] ){selected='selected=selected';}
                     f += '<option value="'+res['io'][io]['id']+'" '+selected+' >'+ res['io'][io]['name'] +'</option>';
                 }
-                f += '</select>';
-                f += '<input type="text" id="name" name="name" value="'+d(res['board_io'][r]['name'])+'" size="5" title="Name of Input" />';
-                f += '<input type="text" id="description" name="description" value="'+d(res['board_io'][r]['description'])+'" size="8" title="Description of Input" />';
-                f += '<input type="text" id="address" name="address" value="'+res['board_io'][r]['address']+'" size="1" title="Address of Input" />';
+                f += '</select></td>';
+                f += '<td><input type="text" id="name'+res['board_io'][r]['id']+'" name="name'+res['board_io'][r]['id']+'" value="'+d(res['board_io'][r]['name'])+'" size="5" title="Name of Input" /></td>';
+                f += '<td><input type="text" id="description'+res['board_io'][r]['id']+'" name="description'+res['board_io'][r]['id']+'" value="'+d(res['board_io'][r]['description'])+'" size="8" title="Description of Input" /></td>';
+                f += '<td><input type="text" id="address'+res['board_io'][r]['id']+'" name="address'+res['board_io'][r]['id']+'" value="'+res['board_io'][r]['address']+'" size="1" title="Address of Input" /></td>';
                 var checked='';
                 if(res['board_io'][r]['enable'] == 1) {checked='checked=checked';}
-                f += '<input type="checkbox" id="enable" name="enable" value="'+res['board_io'][r]['enable']+'" '+checked+' title="Input enable" />';
-                f += '<input type="button" name="save" value="Save" onclick="setCookies(\'page\',\'boardIOSetup\'); saveBoardIOSetup('+res['board_io'][r]['id']+');" />';
-                f += '<input type="button" name="del" value="Del" onclick="setCookies(\'page\',\'boardIOSetup\'); delBoardIOSetup('+res['board_io'][r]['id']+');" />';
-                f += '</form>';
-                f += '</div>';
+                f += '<td><input type="checkbox" id="enable'+res['board_io'][r]['id']+'" name="enable'+res['board_io'][r]['id']+'" value="'+res['board_io'][r]['enable']+'" '+checked+' title="Input enable" /></td>';
+                f += '<td><input type="button" name="save" value="Save" onclick="setCookies(\'page\',\'boardIOSetup\'); saveBoardIOSetup('+res['board_io'][r]['id']+');" />';
+                f += '<input type="button" name="del" value="Del" onclick="setCookies(\'page\',\'boardIOSetup\'); delBoardIOSetup('+res['board_io'][r]['id']+');" /></td>';
+                f += '</tr>';
+                //~ f += '</div>';
             }
             //~ alert(JSON.stringify(getCookies()['board_id']));
-            f += '<center><input type="button" id="add" name="add" value="Add input" onclick="addBoardIOSetup('+getCookies()['board_id']+');"; />';
+            f += '<tr><td colspan=10 style="text-align:center;"><input type="button" id="add" name="add" value="Add input" onclick="addBoardIOSetup('+getCookies()['board_id']+');"; /></td></tr>';
             
-            f += '</center>';
+            f += '</table></form>';
             //~ f += response;
             $("#form").html(f);
         }
         
         function saveBoardIOSetup(id) {
             var r = '';
-            r += 'id='+$('#boardIOForm'+id).find('input[name="id"]').val();
-            r += ',board_id='+$('#boardIOForm'+id).find('select[name="board_id"]').val() ;
-            r += ',io_type_id='+$('#boardIOForm'+id).find('select[name="io_type_id"]').val() ;
-            r += ',name='+$('#boardIOForm'+id).find('input[name="name"]').val();
-            r += ',description='+$('#boardIOForm'+id).find('input[name="description"]').val();
-            r += ',address='+$('#boardIOForm'+id).find('input[name="address"]').val();
+            r += 'id='+$('#boardIOForm').find('input[name="id'+id+'"]').val();
+            r += ',board_id='+$('#boardIOForm').find('select[name="board_id'+id+'"]').val() ;
+            r += ',io_type_id='+$('#boardIOForm').find('select[name="io_type_id'+id+'"]').val() ;
+            r += ',name='+$('#boardIOForm').find('input[name="name'+id+'"]').val();
+            r += ',description='+$('#boardIOForm').find('input[name="description'+id+'"]').val();
+            r += ',address='+$('#boardIOForm').find('input[name="address'+id+'"]').val();
             
-            var enable = $('#boardIOForm'+id).find('input:checkbox:checked').val() ? '1':'0';
+            var enable = $('#boardIOForm').find('input[name="enable'+id+'"]:checkbox:checked').val() ? '1':'0';
             r += ',enable='+enable;
             //~ alert(r);
             webiopi().callMacro("saveBoardIOSetup", [r] );
@@ -1016,19 +1105,29 @@
             f += '<table width=100% style="border:1px solid gray; margin:5px; padding: 5px;" ><tr><td>Input</td><td>Inv.</td><td>Delay</td><td>Output</td><td>Save</td><td>Delete</td></tr>';
             f += '<tr><td>';
             
+            $("#type").find('onevent', function () {
+                var type = $( "#type option:selected" ).val();
+                alert(type);
+                
+            });
+            
+            
+            
             f += '<select id="in" name="in" title="Select Input" >';
+            
             for(r in res['in']) {
                 var in_selected = '';
                 if( res['in'][r]['id'] == res['program'][0]['in_id'] ){in_selected='selected=selected';}
                 f += '<option value="'+res['in'][r]['id']+'" '+in_selected+' title="Select Input" >'+ res['in'][r]['bname'] + ' ' + res['in'][r]['name'] + ' </option>';
             }
+            
             f += '</select>';
         
             f += "</td><td>";
                         
             var in_checked='';
-            if(res['program'][0]['in_inverted'] == 1) {in_checked='checked=checked';}
-            f += '<input type="checkbox" id="in_inverted" name="in_inverted" value="'+res['program'][0]['in_inverted']+'" '+in_checked+' title="Select for inverted Input" />';
+            if(res['program'][0]['inverted'] == 1) {in_checked='checked=checked';}
+            f += '<input type="checkbox" id="inverted" name="inverted" value="'+res['program'][0]['inverted']+'" '+in_checked+' title="Select for inverted Input" />';
         
             f += "</td>";
             f += '<td><input type="text" id="in_delay" name="in_delay" value="'+res['program'][0]['in_delay']+'" size="1" title="Input delay" /></td>';
@@ -1115,8 +1214,8 @@
             r += ',enable='+enable;
             
             r += ',in_id='+$('#ProgramSetupForm').find('select[name="in"]').val() ;
-            var in_inverted=$('#in_inverted').is(':checked') ? '1':'0';
-            r += ',in_inverted='+in_inverted;
+            var inverted=$('#inverted').is(':checked') ? '1':'0';
+            r += ',inverted='+inverted;
             r += ',in_delay='+$('#ProgramSetupForm').find('input[name="in_delay"]').val();
             r += ',out_id='+$('#ProgramSetupForm').find('select[name="out"]').val() ;
             var type_id = $('#ProgramSetupForm').find('select[name="type"]').val() ;
@@ -1173,6 +1272,7 @@
     <div id="text"></div>
     <div id="message"></div>
     <div id="footer"></div>
+    <div id="datetime"></div>
     <div id="dialog"></div>
 
 </div>

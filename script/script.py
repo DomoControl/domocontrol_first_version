@@ -20,7 +20,7 @@
 ##############################################################################
 
 import webiopi
-import datetime
+import datetime, time
 import sqlite3
 import json
 import urllib
@@ -128,7 +128,11 @@ def setBoardIO():
         P['type'].update({r['id'] : r})
 
 def getIO(io_id, p_id, All=0): #update IN status in P dict
+    
     #~ debug('io_id=%s  p_id=%s all=%s' %(io_id, p_id, All))
+    
+    if io_id==0: #IO virtuale
+        return
     board_id =  P['board_io'][io_id]['board_id']
     io_address = int(P['board_io'][io_id]['address'])
     
@@ -157,7 +161,7 @@ def setProgram(): #Put into P dict all pi_program DB
         P['program'][r['id']].update({'OUT' : 0})
         P['program'][r['id']].update({'IN_DELAY' : 0})
         P['program'][r['id']].update({'OUT_DELAY' : 0})
-        P['program'][r['id']].update({'IN' : r['in_inverted']})
+        P['program'][r['id']].update({'IN' : r['inverted']})
     #~ debug(P['program'])
              
 
@@ -200,13 +204,13 @@ def loop():
         
         
         if P['program'][r]['type_id'] == 1: #=========>>>>>>>>>>> Pulse
-            debug('Pulse')
+            #~ debug('Pulse')
             pass
         elif P['program'][r]['type_id'] == 2: #=========>>>>>>>>>>> Timer
             #~ debug('Timer')
             #~ debug(P['program'][r])
-            in_inverted = 1 if P['program'][r]['in_inverted'] == 1 else 0 
-            if int(P['program'][r]['IN']) == in_inverted:
+            inverted = 1 if P['program'][r]['inverted'] == 1 else 0 
+            if int(P['program'][r]['IN']) == inverted:
                 if 'TIMER' in P['program'][r]:
                     if P['program'][r]['TIMER'] > 0:
                         P['program'][r]['TIMER'] -= 1
@@ -230,11 +234,44 @@ def loop():
                 
                 
         elif P['program'][r]['type_id'] == 3: #=========>>>>>>>>>>> Chrono
-            #~ debug('Chrono')
+            chrono = P['program'][r]['chrono'].split(';')
+            chrono = [x for x in chrono if x != '']
+            date = NOW().strftime('%Y-%m-%d')
+            chr_out=0;
+            while chrono:
+                fh = chrono.pop(0)
+                fm = chrono.pop(0)
+                fs = chrono.pop(0)
+                
+                th = chrono.pop(0)
+                tm = chrono.pop(0)
+                ts = chrono.pop(0)
+                
+                tfrom = '%s %s:%s:%s' %(date, fh, fm, fs)
+                tto = '%s %s:%s:%s' %(date, th, tm, ts)  
+                
+                FMT = '%Y-%m-%d %H:%M:%S'
+                timefrom = datetime.datetime.strptime(tfrom, FMT)
+                timeto = datetime.datetime.strptime(tto, FMT)
+                
+                
+                inverted = 1 if P['program'][r]['inverted'] == 1 else 0 
+                if NOW() > timefrom and NOW() < timeto:
+                    chr_out += 1;
+                    #~ debug('>>>1<<< From:%s to:%s now:%s now>from:%s now<to:%s' %(tfrom, tto, NOW(), NOW()>timefrom, NOW()<timeto ))
+                else:
+                    #~ debug('>>>0<<< From:%s to:%s now:%s now>from:%s now<to:%s' %(tfrom, tto, NOW(), NOW()>timefrom, NOW()<timeto ))
+                    pass
+                    
+                if chr_out>0:
+                    P['program'][r].update({'OUT' : not inverted})
+                else:
+                    P['program'][r].update({'OUT' : inverted})
+                
             pass
         elif P['program'][r]['type_id'] == 4: #=========>>>>>>>>>>> Manual
-            in_inverted = 1 if P['program'][r]['in_inverted'] == 1 else 0 
-            if int(P['program'][r]['IN']) == in_inverted:
+            inverted = 1 if P['program'][r]['inverted'] == 1 else 0 
+            if int(P['program'][r]['IN']) == inverted:
                 P['program'][r].update({'OUT' : 1})
             else:
                 P['program'][r].update({'OUT' : int(0)})
@@ -553,14 +590,54 @@ def delInputSetupSave(*args):
     conn(q)
 #~End IO setup
 
+#~boardTypeSetup 
+@webiopi.macro             
+def boardTypeSetup(*args):
+    q = "SELECT * FROM pi_board_type"
+    debug(q)
+    res = query(q)
+    debug(res)
+    return res 
+
+@webiopi.macro 
+def saveBoardType(*args):
+    #~ debug(args);
+    q = "UPDATE pi_board_type SET "
+    i=0;
+    for r in args:
+        if r[0:3] == 'id=':
+            ids=r[3:]
+        else:
+            q += r[0:r.find('=')] + "='" + r[r.find('=')+1:] + "',"
+    q += "timestamp='%s'" %NOW()
+    q += " WHERE id=%s" % ids
+    debug(q)
+    c = conn(q)
+
+@webiopi.macro 
+def addBoardType(*args):
+    q = "INSERT INTO pi_board_type (name,description) VALUES ('name','description');"
+    conn(q)
+
+@webiopi.macro 
+def delBoardType(*args):
+    q = "DELETE FROM pi_board_type WHERE id="+args[0]
+    #~ debug(q)
+    conn(q)
+
+
+
 #~ BoardSetup 
 @webiopi.macro             
 def setBoardSetup():
+    res = {}
     q = "SELECT * FROM pi_board"
-    board = query(q)    
-    res = json.dumps(board) 
+    res['board'] = query(q)
+    
+    q = "SELECT * FROM pi_board_type"  
+    res['board_type'] = query(q)
     #~ debug(res)
-    return res 
+    return json.dumps(res)
 
 @webiopi.macro             
 def setBoardSetupSave(*args):
@@ -590,8 +667,9 @@ def addBoardSetup():
 def setBoardIOSetup(id):
     res = {}
     q = "SELECT b.id bid, b.name bname, b.description bdescription, b.enable benable, i.* FROM pi_board_io AS i LEFT JOIN pi_board AS b ON (b.id=i.board_id) WHERE b.id="+id+" ORDER BY b.id, id;"
-    debug(q)
+    #~ debug(q)
     res['board_io'] = query(q)
+    #~ debug(res['board_io'])
     q = "SELECT * FROM pi_io_type;"
     res['io'] = query(q) 
     q = "SELECT * FROM pi_board;"
@@ -611,7 +689,7 @@ def saveBoardIOSetup(*args):
             q += r[0:r.find('=')] + "='" + r[r.find('=')+1:] + "',"
     q += "timestamp='%s'" %NOW()
     q += " WHERE id=%s" % ids
-    #~ debug(q)
+    debug(q)
     c = conn(q)
 
 @webiopi.macro
