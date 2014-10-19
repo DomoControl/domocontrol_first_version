@@ -130,9 +130,9 @@ def setBoardIO():
 def getIO(io_id, p_id, All=0): #update IN status in P dict
     
     #~ debug('io_id=%s  p_id=%s all=%s' %(io_id, p_id, All))
-    
     if io_id==0: #IO virtuale
         return
+        
     board_id =  P['board_io'][io_id]['board_id']
     io_address = int(P['board_io'][io_id]['address'])
     
@@ -167,6 +167,10 @@ def setProgram(): #Put into P dict all pi_program DB
 
 
 def setOUT(io_id, p_id, OUT): #Set OUT status
+    #~ debug('setOUT: io_id:%s  p_id:%s  OUT:%s' %(io_id, p_id, OUT))
+    if int(P['board_io'][io_id]['address']) == int(0):
+        return
+    
     board_id =  P['board_io'][io_id]['board_id']
     io_address = int(P['board_io'][io_id]['address'])
     io_status = P['pcb'][board_id].portRead()

@@ -1105,20 +1105,11 @@
             f += '<table width=100% style="border:1px solid gray; margin:5px; padding: 5px;" ><tr><td>Input</td><td>Inv.</td><td>Delay</td><td>Output</td><td>Save</td><td>Delete</td></tr>';
             f += '<tr><td>';
             
-            $("#type").find('onevent', function () {
-                var type = $( "#type option:selected" ).val();
-                alert(type);
-                
-            });
-            
-            
-            
             f += '<select id="in" name="in" title="Select Input" >';
-            
             for(r in res['in']) {
                 var in_selected = '';
                 if( res['in'][r]['id'] == res['program'][0]['in_id'] ){in_selected='selected=selected';}
-                f += '<option value="'+res['in'][r]['id']+'" '+in_selected+' title="Select Input" >'+ res['in'][r]['bname'] + ' ' + res['in'][r]['name'] + ' </option>';
+                f += '<option value="'+res['in'][r]['id']+'" '+in_selected+' title="Select Input" >'+res['in'][r]['bname']+' </option>';
             }
             
             f += '</select>';
