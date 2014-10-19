@@ -1131,12 +1131,12 @@
             f += '<td><select id="out" name="out" title="Select Output" >';
             for(r in res['out']) {
                 var out_selected = '';
-                //Colored the used input
+                //Colored the used output and selected
                 for(r1 in res['program_all']) {
-                    if(res['program_all'][0]['in_id']==res['in'][r]['id']){var style1='style="color:red; font-weight:bold;"'; }
-                    else{var style1='style="color:black;"';}
+                    if(res['program'][0]['out_id']==res['out'][r]['id']){var style1='style="color:gray; font-weight:bold;"'; out_selected='selected=selected';}
+                    else if(res['program_all'][0]['out_id']==res['out'][r]['id']){var style1='style="color:red; font-weight:bold;"'; }
+                    else{var style1='style="color:green;font-weight:bold;"';}
                 }
-                if( res['out'][r]['id'] == res['program'][0]['out_id'] ){out_selected='selected=selected';}
                 f += '<option '+style1+' value="'+res['out'][r]['id']+'" '+out_selected+' title="Select Output" >'+ res['out'][r]['bname'] + ' ' + res['out'][r]['name'] + ' </option>';
             }
             f += '</select></td>';                
