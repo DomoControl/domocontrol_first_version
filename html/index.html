@@ -313,7 +313,7 @@
 					for(r in res['program']){
                         //~ text += JSON.stringify(res['program'][r]['in_id']);
 						f += "<tr><td id='title'colspan=5>"+d(res['program'][r]['description'])+"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+d(res['type'][res['program'][r]['type_id']]['name'])+"</td></tr>";    
-						f += "<tr><td>"+d(res['board_io'][res['program'][r]['in_id']]['description'])+"</td><td>Inverted</td><td>Delay</td><td>"+d(res['board_io'][res['program'][r]['out_id']]['description'])+"</td><td>Edit</td></tr>";
+						f += "<tr><td>"+d(res['board_io'][res['program'][r]['in_id']]['description'])+"</td><td>Inverted</td><td>"+d(res['board_io'][res['program'][r]['out_id']]['description'])+"</td><td>Edit</td></tr>";
                         
                         //Input
                         if(res['program'][r]['type_id'] == 3 ){
@@ -368,7 +368,7 @@
                     
 						if(res['program'][r]['inverted'] == 1){var check = 'checked';} else {var check = '';}
 						f += "<td><input type='checkbox' name='inverted' "+check+" /></td>";
-						f += "<td>"+res['program'][r]['in_delay']+"</td>";
+						//~ f += "<td>"+res['program'][r]['in_delay']+"</td>";
                     
 						if(res['program'][r]['OUT'] == 1){var out_image = 'out_on.png'}else{var out_image = 'out_off.png'}
 						f += "<td><input type='image' src='./images/"+out_image+"' height='40px' name='OUT' value='"+res['program'][r]['OUT']+"' /></td>";                   
@@ -1102,18 +1102,23 @@
             }
             f += '</select></td></tr></table>'; 
             
-            f += '<table width=100% style="border:1px solid gray; margin:5px; padding: 5px;" ><tr><td>Input</td><td>Inv.</td><td>Delay</td><td>Output</td><td>Save</td><td>Delete</td></tr>';
+            f += '<table width=100% style="border:1px solid gray; margin:5px; padding: 5px;" ><tr><td>Input</td><td>Inv.</td><td>Output</td><td>Save</td><td>Delete</td></tr>';
             f += '<tr><td>';
             
-            f += '<select id="in" name="in" title="Select Input" >';
+            //Input select
+            f += '<select class="program_input" id="in" name="in" title="Select Input" >';
             for(r in res['in']) {
+                
+                //Colored the used input
+                var style1=''
+                for(r1 in res['program_all']) {
+                    if(res['program_all'][r1]['in_id']==res['in'][r]['id']){style1='style="color:red; font-weight:bold;"'; }
+                }
                 var in_selected = '';
                 if( res['in'][r]['id'] == res['program'][0]['in_id'] ){in_selected='selected=selected';}
-                f += '<option value="'+res['in'][r]['id']+'" '+in_selected+' title="Select Input" >'+res['in'][r]['bname']+' </option>';
+                f += '<option '+style1+' value="'+res['in'][r]['id']+'" '+in_selected+' title="Select Input" >'+res['in'][r]['bname']+ ' ' + res['in'][r]['name'] +  '</span></option>';
             }
-            
             f += '</select>';
-        
             f += "</td><td>";
                         
             var in_checked='';
@@ -1121,12 +1126,18 @@
             f += '<input type="checkbox" id="inverted" name="inverted" value="'+res['program'][0]['inverted']+'" '+in_checked+' title="Select for inverted Input" />';
         
             f += "</td>";
-            f += '<td><input type="text" id="in_delay" name="in_delay" value="'+res['program'][0]['in_delay']+'" size="1" title="Input delay" /></td>';
+            //~ f += '<td><input type="text" id="in_delay" name="in_delay" value="'+res['program'][0]['in_delay']+'" size="1" title="Input delay" /></td>';
+            //Output select
             f += '<td><select id="out" name="out" title="Select Output" >';
             for(r in res['out']) {
                 var out_selected = '';
+                //Colored the used input
+                for(r1 in res['program_all']) {
+                    if(res['program_all'][0]['in_id']==res['in'][r]['id']){var style1='style="color:red; font-weight:bold;"'; }
+                    else{var style1='style="color:black;"';}
+                }
                 if( res['out'][r]['id'] == res['program'][0]['out_id'] ){out_selected='selected=selected';}
-                f += '<option value="'+res['out'][r]['id']+'" '+out_selected+' title="Select Output" >'+ res['out'][r]['bname'] + ' ' + res['out'][r]['name'] + ' </option>';
+                f += '<option '+style1+' value="'+res['out'][r]['id']+'" '+out_selected+' title="Select Output" >'+ res['out'][r]['bname'] + ' ' + res['out'][r]['name'] + ' </option>';
             }
             f += '</select></td>';                
             
@@ -1150,10 +1161,10 @@
                     var t = res['program'][0]['timer'];
                     t = t.split(';'); 
                     f += '<center id="ntype"><p><h3>Insert timer Time (days - hours - minutes - seconds)</h3>';
-                    f += 'D:<input type="number" min="0" max="30" step="1" value="'+t[0]+'" name="day" id="day" style="width:50px;" /> ';
-                    f += 'H:<input type="number" min="0" max="23" step="1" value="'+t[1]+'" name="hour" id="hour" style="width:50px;" /> ';
-                    f += 'M:<input type="number" min="0" max="59" step="1" value="'+t[2]+'" name="minute" id="minute" style="width:50px;" /> ';
-                    f += 'S:<input type="number" min="0" max="59" step="1" value="'+t[3]+'" name="second" id="second" style="width:50px;" /> ';
+                    f += 'D:<input type="number" min="0" max="30" step="1" value="'+(t[0] == '' ? 0 : t[0])+'" name="day" id="day" style="width:50px;" /> ';
+                    f += 'H:<input type="number" min="0" max="23" step="1" value="'+(t[1] == '' ? 0 : t[1])+'" name="hour" id="hour" style="width:50px;" /> ';
+                    f += 'M:<input type="number" min="0" max="59" step="1" value="'+(t[2] == '' ? 0 : t[2])+'" name="minute" id="minute" style="width:50px;" /> ';
+                    f += 'S:<input type="number" min="0" max="59" step="1" value="'+(t[3] == '' ? 0 : t[3])+'" name="second" id="second" style="width:50px;" /> ';
                     f += '</p></center>';
                 break;
                 case '3':
@@ -1207,7 +1218,7 @@
             r += ',in_id='+$('#ProgramSetupForm').find('select[name="in"]').val() ;
             var inverted=$('#inverted').is(':checked') ? '1':'0';
             r += ',inverted='+inverted;
-            r += ',in_delay='+$('#ProgramSetupForm').find('input[name="in_delay"]').val();
+            //~ r += ',in_delay='+$('#ProgramSetupForm').find('input[name="in_delay"]').val();
             r += ',out_id='+$('#ProgramSetupForm').find('select[name="out"]').val() ;
             var type_id = $('#ProgramSetupForm').find('select[name="type"]').val() ;
             r += ',type_id='+type_id ;
@@ -1225,12 +1236,16 @@
             if(type_id=="3") {
                 var c=',chrono=';
                 for (i=1; i<61; i++){
-                    c += $('#ProgramSetupForm').find('input[name="ch'+i+'"]').val();
+                    if ( $('#ProgramSetupForm').find('input[name="ch'+i+'"]').val() != undefined ){var chval= $('#ProgramSetupForm').find('input[name="ch'+i+'"]').val();}
+                    else {var chval='';}
+                    
+                    c += chval;
                     if(i<60){c += ';';}
                 }
                 r += c;
             }
             
+            //~ alert(r)
             webiopi().callMacro("saveProgramSetup", [r] );
             getPage(1);
         }

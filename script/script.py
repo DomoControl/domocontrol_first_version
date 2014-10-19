@@ -238,6 +238,7 @@ def loop():
                 
                 
         elif P['program'][r]['type_id'] == 3: #=========>>>>>>>>>>> Chrono
+            
             chrono = P['program'][r]['chrono'].split(';')
             chrono = [x for x in chrono if x != '']
             date = NOW().strftime('%Y-%m-%d')
@@ -719,13 +720,23 @@ def programSetup(*args):
 @webiopi.macro
 def getProgramSetup(*args):
     res = {}
-    q = "SELECT * FROM pi_program WHERE id="+args[0]
+    q = 'SELECT * FROM pi_program WHERE id='+args[0]
     res['program'] = query(q)
-    q = "SELECT i.name ioname, bi.*, b.name bname, b.description bdescription FROM pi_board_io bi, pi_io_type i, pi_board b WHERE bi.io_type_id=i.id AND bi.board_id=b.id AND i.name='in' AND bi.id NOT IN (SELECT p.in_id FROM pi_program p);"
+    
+    q = 'SELECT i.name ioname, bi.*, b.name bname, b.description bdescription '\
+        'FROM pi_board_io bi, pi_io_type i, pi_board b '\
+        'WHERE bi.io_type_id=i.id AND bi.board_id=b.id AND (i.name="in" OR i.name="no-in");'
     res['in'] = query(q)
-    q = "SELECT i.name ioname, bi.*, b.name bname, b.description bdescription FROM pi_board_io bi, pi_io_type i, pi_board b WHERE bi.io_type_id=i.id AND bi.board_id=b.id AND i.name='out' AND bi.id NOT IN (SELECT p.out_id FROM pi_program p);"
+    
+    q = 'SELECT i.name ioname, bi.*, b.name bname, b.description bdescription '\
+        'FROM pi_board_io bi, pi_io_type i, pi_board b '\
+        'WHERE bi.io_type_id=i.id AND bi.board_id=b.id AND i.name="out";'
     res['out'] = query(q)
-    q = "SELECT * FROM pi_type;"
+    
+    q = 'SELECT * FROM pi_program'
+    res['program_all'] = query(q)
+    
+    q = 'SELECT * FROM pi_type;'
     res['type'] = query(q)
     #~ debug(res)
     return json.dumps(res)
