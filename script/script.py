@@ -336,11 +336,12 @@ def getMenuStatus(*args):
 @webiopi.macro             
 def setLogin(*args):
     #~ debug("%s  %s" %(args[0],args[1]))
+    res = {}
     q="SELECT id,username,name,surname,session,lang, privilege FROM pi_user WHERE username='%s' AND password='%s'" %(args[0],args[1])
-    debug(q)
-    c = query(q)
-    if len(c) > 0:
-        return json.dumps(c)    
+    #~ debug(q)
+    res['user'] = query(q)
+    if len(res['user']) > 0:
+        return json.dumps(res)    
     else:
         return "Login_NO"
     

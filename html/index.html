@@ -99,7 +99,7 @@
             if(typeof(page) == 'undefined' || page == '""') {setCookies('page','login'); getPage(1);} //init if page is not set
             //~ alert(document.cookie);
             logt(page); //Send LOG
-            if (page != 'menuStatus'){stopInterval();}    
+            if (page != 'menuStatus'){stopInterval();}
             switch(page) {
                 case 'login':
                     //~ alert('Login');
@@ -120,8 +120,13 @@
                     title += '<small>Menu</small>'
                     footer += '<span><input type="button" name="footer" value="'+L('logout')+'" onclick=LogOut() ></span>' ;
                     footer += '<span>'+L('welcome')+' ' + getCookies()["username"] + '</span>';   
-                    $("#form").html('<p class="but"><input type="button" name="status" value="Status" onclick="setCookies(\'page\',\'menuStatus\'); getPage(1)" ></p>' +
-                        '<p class="but"><input type="button" name="setup" value="Setup" onclick="setCookies(\'page\',\'menuSetup\');getPage(1)" ></p>');                  
+                    var f = '';
+                    f += '<p class="but"><input type="button" name="status" value="Status" onclick="setCookies(\'page\',\'menuStatus\'); getPage(1)" ></p>';
+                    //privilege
+                    if(getCookies()['privilege1']==1 || getCookies()['privilege3']==1 || getCookies()['privilege4']==1){
+                        f += '<p class="but"><input type="button" name="setup" value="Setup" onclick="setCookies(\'page\',\'menuSetup\');getPage(1)" ></p>'; 
+                    }
+                    $("#form").html(f);                  
                     $("#form1").html('');
                     break;
 				case 'menuStatus':
@@ -142,16 +147,21 @@
                     footer += '<span><input type="button" name="footer" value="'+L('logout')+'" onclick=LogOut() ></span>' ;
                     footer += '<span><input type="button" name="footer" value="'+L('main_menu')+'" onclick="setCookies(\'page\',\'menu\');getPage(1)" ></span>' ;
                     footer += '<span>'+L('welcome')+' ' + getCookies()["username"] + '</span>';   
-                    $("#form").html( '<p class="but"><input type="button" name="setup" value="User Setup" onclick="setCookies(\'page\',\'userSetup\');getPage(1)" ></p>' +
-                        '<p class="but"><input type="button" name="setup" value="Area Setup" onclick="setCookies(\'page\',\'areaSetup\');getPage(1)" ></p>' +
-                        '<p class="but"><input type="button" name="setup" value="Group Privilege" onclick="setCookies(\'page\',\'privilegeSetup\');getPage(1)" ></p>' +
-                        '<p class="but"><input type="button" name="setup" value="Lang Setup" onclick="setCookies(\'page\',\'langSetup\');getPage(1)" ></p>' +
-                        '<p class="but"><input type="button" name="setup" value="Board Type" onclick="setCookies(\'page\',\'boardTypeSetup\');getPage(1)" ></p>' +
-                        '<p class="but"><input type="button" name="setup" value="Board Setup" onclick="setCookies(\'page\',\'boardSetup\');getPage(1)" ></p>' +
-                        '<p class="but"><input type="button" name="setup" value="Input Setup" onclick="setCookies(\'page\',\'inputSetup\');getPage(1)" ></p>' +
-                        '<p class="but"><input type="button" name="setup" value="Type Setup" onclick="setCookies(\'page\',\'typeSetup\');getPage(1)" ></p>' +
-                        '<p class="but"><input type="button" name="setup" value="Program Setup" onclick="setCookies(\'page\',\'programSetup\');getPage(1)" ></p>' +
-                        '<p class="but"><input type="button" name="setup" value="Email - SMS Setup" onclick="setCookies(\'page\',\'email-smsSetup\');getPage(1)" ></p>' );
+                    var f = '';  
+                    //privilege
+                    if(getCookies()['privilege4']==1){
+                        f += '<p class="but"><input type="button" name="setup" value="User Setup" onclick="setCookies(\'page\',\'userSetup\');getPage(1)" ></p>';
+                    }
+                    f += '<p class="but"><input type="button" name="setup" value="Area Setup" onclick="setCookies(\'page\',\'areaSetup\');getPage(1)" ></p>';
+                    f += '<p class="but"><input type="button" name="setup" value="Group Privilege" onclick="setCookies(\'page\',\'privilegeSetup\');getPage(1)" ></p>';
+                    f += '<p class="but"><input type="button" name="setup" value="Lang Setup" onclick="setCookies(\'page\',\'langSetup\');getPage(1)" ></p>';
+                    f += '<p class="but"><input type="button" name="setup" value="Board Type" onclick="setCookies(\'page\',\'boardTypeSetup\');getPage(1)" ></p>';
+                    f += '<p class="but"><input type="button" name="setup" value="Board Setup" onclick="setCookies(\'page\',\'boardSetup\');getPage(1)" ></p>';
+                    f += '<p class="but"><input type="button" name="setup" value="Input Setup" onclick="setCookies(\'page\',\'inputSetup\');getPage(1)" ></p>';
+                    f += '<p class="but"><input type="button" name="setup" value="Type Setup" onclick="setCookies(\'page\',\'typeSetup\');getPage(1)" ></p>';
+                    f += '<p class="but"><input type="button" name="setup" value="Program Setup" onclick="setCookies(\'page\',\'programSetup\');getPage(1)" ></p>';
+                    f += '<p class="but"><input type="button" name="setup" value="Email - SMS Setup" onclick="setCookies(\'page\',\'email-smsSetup\');getPage(1)" ></p>';
+                    $("#form").html(f)
                     $("#form1").html('');
                     break;
                 case 'userSetup':
@@ -409,33 +419,36 @@
         
         //Ritorna i dati dell'utente che vengono salvati
         var setLogin = function (macro, args, response) {
+            //~ alert(response);
             if(response == "Login_NO") {
                 alert("Username e Password non validi");    
             } else {
-                var res = $.parseJSON(response)[0];
+                var res = $.parseJSON(response);
+                //~ alert(res['user'][0]['name'])
                 setCookies('page','menu',1);
-                setCookies('user_id',res['id'],1);
-                setCookies('username',res['username'],1);
-                setCookies('name',res['name'],1);
-                setCookies('surname',res['surname'],1);
-                setCookies('session_timeout',res['session'],1);
-                setCookies('language',res['lang'],1);
+                setCookies('user_id',res['user'][0]['id'],1);
+                setCookies('username',res['user'][0]['username'],1);
+                setCookies('name',res['user'][0]['name'],1);
+                setCookies('surname',res['user'][0]['surname'],1);
+                setCookies('session_timeout',res['user'][0]['session'],1);
+                setCookies('language',res['user'][0]['lang'],1);
                 
-                var privilege = res['privilege'].split(';');
-                if( privilege.indexOf('4') > -1){setCookies('administrator','yes');}else{setCookies('administrator','no');}
+                for (r in res['user'][0]['privilege']){
+                    setCookies('privilege'+res['user'][0]['privilege'][r],'1');
+                }
                 getPage();
             }
         }
         
         //rimuove i cookie e logout
         function LogOut() {
-            document.cookie = "user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
-            document.cookie = "username=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
-            document.cookie = "user=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
-            document.cookie = "surname=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
-            document.cookie = "session_timeout=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
-            document.cookie = "lang=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
-            document.cookie = "administrator=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+            //remove all cookies
+            var cookies = document.cookie.split(";");
+            for(var i=0; i < cookies.length; i++) {
+                var equals = cookies[i].indexOf("=");
+                var name = equals > -1 ? cookies[i].substr(0, equals) : cookies[i];
+                document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+            }
             setCookies('page','login');
             //~ alert(getCookies()['page']);
             getPage();
@@ -689,10 +702,7 @@
         var setPrivilege = function (macro, args, response) {
             res = eval(response);
             var f = '<form name="setPrivilegeForm" id="setPrivilegeForm">';
-            f +=    '<div class="fieldSet">';
-            f +=        '<fieldset>';
-            f +=            '<legend>Form Privilege</legend>';
-            f +=            '<table class="f-h" align=center><tr><th>Name</th><th>Description</th><th>Save</th><th></th></tr>';
+            f +=    '<table class="f-h" align=center><tr><th>Name</th><th>Description</th><th>Save</th><th></th></tr>';
             for (r in res) {
                 //~ $("#text").html(r + ' - ' + res[r]['name'] + '<br>'); 
                 f += '<input type="hidden" name="id['+ res[r]['id'] +']" value="'+ res[r]['id'] +'" />';
@@ -705,8 +715,6 @@
             }
             //~ f += '<tr><td colspan=3><input type="button" id="add" name="add" value="Add" onclick=setPrivilegeAdd(); /></td></tr> ';                
             f +=        '</table>';
-            f +=        '</fieldset>';
-            f +=    '</div>';
             f += '</form>'; 
             //~ alert(f);
             $("#form").html(f);
