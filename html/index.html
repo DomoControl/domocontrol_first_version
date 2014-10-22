@@ -382,7 +382,10 @@
                     
 						if(res['program'][r]['OUT'] == 1){var out_image = 'out_on.png'}else{var out_image = 'out_off.png'}
 						f += "<td><input type='image' src='./images/"+out_image+"' height='40px' name='OUT' value='"+res['program'][r]['OUT']+"' /></td>";                   
-						f += "<td><input type='button' value='Edit' onclick=\"setCookies(\'page\',\'programSetup\');getPage(1)\" /></td>";
+						f += "<td>";
+                        if(getCookies()['privilege1']==1 || getCookies()['privilege3']==1 || getCookies()['privilege4']==1){
+                            f += "<input type='button' value='Edit' onclick=\"setCookies(\'page\',\'programSetup\');getPage(1)\" /></td>";
+                        }
 						f += "</tr>";
 					
                     }
