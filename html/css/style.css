@@ -12,14 +12,14 @@ body, html {
     margin: 0 auto;
 }
 
-h1 {background: #2952D8; color:white; margin:0; font-size:26px;}
+h1 {background: #2952D8; color:white; margin:0 0 10px 0; font-size:26px;}
 
 #footer {
     width: auto;
     background: #2952D8;
     color: white;
     text-align:center;
-    margin-top: 20px;
+    
     padding: 5px;
     
 }
@@ -28,13 +28,15 @@ h1 {background: #2952D8; color:white; margin:0; font-size:26px;}
 #title{
     text-align:center;
     font-weight:bold;
-    background:#9FB2C9;
+    background:#8FA2B9;
+    color: white;
     margin:0;
 }
-#subtitle{
+#date{
     text-align:right;
-    margin: 0;
+    margin: 10px 0 0 0;
     padding:3px;
+    font-size:14px;
 }
 
 .status {margin-top:0;}

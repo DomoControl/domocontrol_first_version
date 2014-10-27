@@ -25,7 +25,7 @@
         }, 1000);
         
         var getTime = function (macro, args, response) {
-            $("#subtitle").html(response);
+            $("#date").html(response);
         }
         
         
@@ -1112,8 +1112,9 @@
             window.globalVar = res;
             var f = "";
             f += '<form name="ProgramSetupForm" id="ProgramSetupForm">'; 
-            f += '<table width=100%><tr><td id="title" colspan=2>'+L('program_Setup_n.')+' '+res['program'][0]['id']+'  '+ L(res['program'][0]['name']) + '</td></tr>';
+            f += '<table width=100%><tr><td id="title" colspan=10>'+L('program_Setup_n.')+' '+res['program'][0]['id']+'  '+ L(res['program'][0]['name']) + '</td></tr>';
             f += '<input id="id" type="hidden" name="id" value="'+ res['program'][0]['id'] +'" />';
+            
             f += '<tr><td>Name: <input type="text" id="name" name="name" value="'+d(res['program'][0]['name'])+'" size=8 title="Name of program" /></td>';
             f += '<td>Description: <input type="text" id="description" name="description" value="'+d(res['program'][0]['description'])+'" size=10 title="Description of program" /></td>';
             
@@ -1122,7 +1123,7 @@
             f += '<td>Enable: <input type="checkbox" id="enable" name="enable" value="'+res['program'][0]['enable']+'" '+enable+' title="Select for program enables" /></td></tr>';
             
             
-            f += '<tr><td colspan=2>Type of program: <select id="type" name="type" title="Select Type Function" onChange="getType();">';
+            f += '<tr><td colspan=3>Type of program: <select id="type" name="type" title="Select Type Function" onChange="getType();">';
             for(r in res['type']) {
                 var type_selected = '';
                 if( res['type'][r]['id'] == res['program'][0]['type_id'] ){type_selected='selected=selected';}
@@ -1130,7 +1131,7 @@
             }
             f += '</select></td></tr></table>'; 
             
-            f += '<table width=100% style="border:1px solid gray; margin:5px; padding: 5px;" ><tr><td>Input</td><td>Inv.</td><td>Output</td><td>Save</td><td>Delete</td></tr>';
+            f += '<table width=100% style="border:1px solid gray; margin:5px; padding: 1px;" ><tr><td>Input</td><td>Inv.</td><td>Output</td><td>Save</td><td>Delete</td></tr>';
             f += '<tr><td>';
             
             //Input select
@@ -1147,8 +1148,9 @@
                 f += '<option '+style1+' value="'+res['in'][r]['id']+'" '+in_selected+' title="Select Input" >'+res['in'][r]['bname']+ ' ' + res['in'][r]['name'] +  '</span></option>';
             }
             f += '</select>';
-            f += "</td><td>";
-                        
+            f += "</td>";
+            
+            f += "<td>";
             var in_checked='';
             if(res['program'][0]['inverted'] == 1) {in_checked='checked=checked';}
             f += '<input type="checkbox" id="inverted" name="inverted" value="'+res['program'][0]['inverted']+'" '+in_checked+' title="Select for inverted Input" />';
@@ -1187,8 +1189,8 @@
                 case '2': //Timeout
                     var t = res['program'][0]['timer'];
                     t = t.split(';'); 
-                    f += '<center id="ntype"><p><h3>Insert timer Time (days - hours - minutes - seconds)</h3>';
-                    f += 'D:<input type="number" min="0" max="30" step="1" value="'+(t[0] == '' ? 0 : t[0])+'" name="day" id="day" style="width:50px;" /> ';
+                    f += '<center id="ntype"><p>Insert timer Time (days - hours - minutes - seconds)</p>';
+                    f += '<p>D:<input type="number" min="0" max="30" step="1" value="'+(t[0] == '' ? 0 : t[0])+'" name="day" id="day" style="width:50px;" /> ';
                     f += 'H:<input type="number" min="0" max="23" step="1" value="'+(t[1] == '' ? 0 : t[1])+'" name="hour" id="hour" style="width:50px;" /> ';
                     f += 'M:<input type="number" min="0" max="59" step="1" value="'+(t[2] == '' ? 0 : t[2])+'" name="minute" id="minute" style="width:50px;" /> ';
                     f += 'S:<input type="number" min="0" max="59" step="1" value="'+(t[3] == '' ? 0 : t[3])+'" name="second" id="second" style="width:50px;" /> ';
@@ -1295,7 +1297,7 @@
 
 <div id="container">
     <div id="title"></div>
-    <div id="subtitle"></div>
+    
     <div id="user"></div>
     
     <div id="login"></div>
@@ -1305,6 +1307,7 @@
     <div id="form1"></div>
     <div id="text"></div>
     <div id="message"></div>
+    <div id="date"></div>
     <div id="footer"></div>
     <div id="datetime"></div>
     <div id="dialog"></div>
