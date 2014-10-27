@@ -25,6 +25,8 @@ import sqlite3
 import json
 import urllib
 from webiopi.devices.digital.pcf8574 import PCF8574
+#~ import modbus
+
 
 def NOW(): 
     return datetime.datetime.now()    
@@ -47,11 +49,15 @@ Q = {} #Create dict to put element to send to Status Menu
 GPIO = webiopi.GPIO
 TIMER = {} #Dizionario con il valore di tutti i timer
 
+def dev():
+    for a in range(1,100):
+        try:
+            PCF8574(a)
+            debug('________________Device trovato: %s ________________' %a)
+        except:
+            pass
+dev()
 
-#~ so = PCF8574(32)
-#~ si = PCF8574(33)
-
-#~ debug(dir(so))
 
 
 def logFile(x):
@@ -173,7 +179,11 @@ def setOUT(io_id, p_id, OUT): #Set OUT status
     
     board_id =  P['board_io'][io_id]['board_id']
     io_address = int(P['board_io'][io_id]['address'])
-    io_status = P['pcb'][board_id].portRead()
+    try:
+        io_status = P['pcb'][board_id].portRead()
+    except:
+        io_status = 0
+        pass
     
     if OUT == 1:
         out = io_status | M[io_address]
@@ -207,10 +217,29 @@ def loop():
         getIO(P['program'][r]['in_id'],r) #read io status and update IN status in P dict 
         
         
-        if P['program'][r]['type_id'] == 1: #=========>>>>>>>>>>> Pulse
-            #~ debug('Pulse')
+        if P['program'][r]['type_id'] == 1: #=========>>>>>>>>>>> Timer
+            inverted = 1 if P['program'][r]['inverted'] == 1 else 0 
+            
+            if int(P['program'][r]['IN'])== inverted:
+                timer=P['program'][r]['timer']
+                timer = timer.split(';')
+                timersec = int(timer[3]) #secondi
+                timersec += int(timer[2]) * 60 #minuti
+                timersec += int(timer[1]) * 3600 #ore
+                timersec += int(timer[0]) * 3600 * 24 #giorni
+                #~ debug(timersec)
+                P['program'][r].update({'TIMER' : int(timersec)})
+            
+            
+            if 'TIMER' in P['program'][r] and P['program'][r]['TIMER'] > 0:
+                debug("TIMER: %s" %P['program'][r]['TIMER'])
+                P['program'][r]['TIMER'] -= 1
+                P['program'][r].update({'OUT' : int(1)})
+            else:
+                P['program'][r].update({'OUT' : int(0)})
+                
             pass
-        elif P['program'][r]['type_id'] == 2: #=========>>>>>>>>>>> Timer
+        elif P['program'][r]['type_id'] == 2: #=========>>>>>>>>>>> Timeout
             #~ debug('Timer')
             #~ debug(P['program'][r])
             inverted = 1 if P['program'][r]['inverted'] == 1 else 0 
@@ -235,9 +264,7 @@ def loop():
                 if 'TIMER' in P['program'][r]:
                     del P['program'][r]['TIMER']
                 
-                
-                
-        elif P['program'][r]['type_id'] == 3: #=========>>>>>>>>>>> Chrono
+        elif P['program'][r]['type_id'] == 3: #=========>>>>>>>>>>> Automatic
             
             chrono = P['program'][r]['chrono'].split(';')
             chrono = [x for x in chrono if x != '']
@@ -773,6 +800,11 @@ def saveProgramSetup(*args):
 @webiopi.macro 
 def setReloadStatus():
     setup()
+
+@webiopi.macro 
+def getTime():
+    date = NOW().strftime('%Y-%m-%d   %H:%M:%S')
+    return date
 
 def url(t):
     debug(urllib.parse.unquote(t))

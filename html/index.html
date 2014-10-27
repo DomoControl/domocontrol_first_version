@@ -13,8 +13,22 @@
         webiopi().ready(function(){
             getLangDict1();
             //~ alert('qui');
-
+            
+            
+                
+            //~ webiopi().refreshGPIO(true);
         });
+        
+        
+        setInterval(function(){
+            webiopi().callMacro("getTime", '', getTime);
+        }, 1000);
+        
+        var getTime = function (macro, args, response) {
+            $("#subtitle").html(response);
+        }
+        
+        
         
         function getLangDict1(){
             if(getCookies()['language']==undefined){var language='en';}else{var language=getCookies()['language'];}
@@ -293,11 +307,12 @@
             
             //get language flag
             if(getCookies()['language']=='en'){flag='<image src="images/en_flag.png" width="25px" />';}
-            else{flag='<image src="images/it_flag.png" width="25px" />';}
+            else{flag='<image src="images/it_flag.png" width="25px" />';}            
             $("#title").html('<h1>'+L('domocontrol')+' - ' + title + ' '+ flag +'</h1>');
             
             $("#footer").html(footer);
         }
+               
         
         function startStatus(){
             Interval = setInterval(function(){
@@ -323,37 +338,39 @@
 					for(r in res['program']){
                         //~ text += JSON.stringify(res['program'][r]['in_id']);
 						f += "<tr><td id='title'colspan=5>"+d(res['program'][r]['description'])+"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+d(res['type'][res['program'][r]['type_id']]['name'])+"</td></tr>";    
-						f += "<tr><td>"+d(res['board_io'][res['program'][r]['in_id']]['description'])+"</td><td>Inverted</td><td>"+d(res['board_io'][res['program'][r]['out_id']]['description'])+"</td><td>Edit</td></tr>";
+						f += "<tr><td>"+d(res['board_io'][res['program'][r]['in_id']]['description'])+"</td><td>Timer</td><td>Inverted</td><td>"+d(res['board_io'][res['program'][r]['out_id']]['description'])+"</td><td>Edit</td></tr>";
                         
                         //Input
                         if(res['program'][r]['type_id'] == 3 ){
-                            f += '<td>';
+                            f += '<td></td>';
                         }
                         if(res['program'][r]['type_id'] != 3 && res['program'][r]['IN'] == 1 && res['board_io'][res['program'][r]['in_id']]['address'] > '0'){
-                            f += '<td><img src="./images/in_off.png" width="60px" />';
+                            f += '<td><img src="./images/in_off.png" width="60px" /></td>';
                         }
                         else if(res['program'][r]['type_id'] != 3 && res['program'][r]['IN'] == 0 && res['board_io'][res['program'][r]['in_id']]['address'] > '0'){
-                            f += '<td><img src="./images/in_on.png" width="60px" />';
+                            f += '<td><img src="./images/in_on.png" width="60px" /></td>';
                         }
                         else if(res['program'][r]['type_id'] != 3 && res['program'][r]['IN'] == 1 && res['board_io'][res['program'][r]['in_id']]['address'] == '0'){
-                            f += '<td><input type="image" src="./images/in_push_off.png" width="60px" name="IN" value="'+res['program'][r]['IN']+'" onclick=\'invertInput('+r+')\'; />';
+                            f += '<td><input type="image" src="./images/in_push_off.png" width="60px" name="IN" value="'+res['program'][r]['IN']+'" onclick=\'invertInput('+r+')\'; /></td>';
                         }
                         else if(res['program'][r]['type_id'] != 3 && res['program'][r]['IN'] == 0 && res['board_io'][res['program'][r]['in_id']]['address'] == '0'){
-                            f += '<td><input type="image" src="./images/in_push_on.png" width="60px" name="IN" value="'+res['program'][r]['IN']+'" onclick=\'invertInput('+r+')\'; />';
+                            f += '<td><input type="image" src="./images/in_push_on.png" width="60px" name="IN" value="'+res['program'][r]['IN']+'" onclick=\'invertInput('+r+')\'; /></td>';
                         }
                         
-                        if(res['program'][r]['type_id'] == 2){ //Show timer conter
-                            if('TIMER' in res['program'][r]){f += "<br>"+res['program'][r]['TIMER']+" sec";}
+                        f += '<td>';
+                        if(res['program'][r]['type_id'] == 2 || res['program'][r]['type_id'] == 1){ //Show timer conter
+                            if('TIMER' in res['program'][r]){f += res['program'][r]['TIMER']+" sec";}
                             else{
                                 t = res['program'][r]['timer'].split(';');
-                                f += "<br>D:h:m:s "+t[0]+":"+t[1]+":"+t[2]+":"+t[3];
+                                f += "D:h:m:s "+t[0]+":"+t[1]+":"+t[2]+":"+t[3];
                             }
                         }
-                        else if(res['program'][r]['type_id'] == 3){ //Show CHRONO
+                        else if(res['program'][r]['type_id'] == 3){ //Show Automatic
                             t = res['program'][r]['chrono'].split(';');
                             t = t.filter(function(n){ return n != ""});
                             //~ alert(JSON.stringify(t))
-                            var tc='From - To<br>';                            
+                            //~ var tc='From - To<br>';
+                            var tc = '';
                             for(rc in t){
                                 var cfh = t.shift();
                                 var cfm = t.shift();
@@ -364,7 +381,7 @@
                                 
                                 tc += (cfh.length < 2 ? '0':'') + cfh +':' + (cfm.length < 2 ? '0':'') + cfm +':' + (cfs.length < 2 ? '0':'') + cfs + ' - ';
                                 tc += (cth.length < 2 ? '0':'') + cth +':' + (ctm.length < 2 ? '0':'') + ctm +':' + (cts.length < 2 ? '0':'') + cts;
-                                tc += '<br>';
+                                tc += "<br>";
                                 //~ tc += 'From:'+t.shift()+':'+t.shift()+':'+t.shift()+' to:'+t.shift()+':'+t.shift()+':'+t.shift()+'<br>';
                             }
                             
@@ -374,7 +391,7 @@
                             
                             f += tc;
                         }
-                        f += "</td>";
+                        f += '</td>';
                     
 						if(res['program'][r]['inverted'] == 1){var check = 'checked';} else {var check = '';}
 						f += "<td><input type='checkbox' name='inverted' "+check+" /></td>";
@@ -1166,9 +1183,8 @@
             //~ alert(eval(res['program'][0]['timer'])[1]);
             var f = '';
             switch (type) {
-                case '1':
-                break;
-                case '2':
+                case '1': //Timer
+                case '2': //Timeout
                     var t = res['program'][0]['timer'];
                     t = t.split(';'); 
                     f += '<center id="ntype"><p><h3>Insert timer Time (days - hours - minutes - seconds)</h3>';
@@ -1178,7 +1194,7 @@
                     f += 'S:<input type="number" min="0" max="59" step="1" value="'+(t[3] == '' ? 0 : t[3])+'" name="second" id="second" style="width:50px;" /> ';
                     f += '</p></center>';
                 break;
-                case '3':
+                case '3': //Automatic
                     f += '<center id="ntype"><p><h3>Insert interval (hours - minutes - seconds)</h3>';
                     var c = res['program'][0]['chrono'];
                     c = c.split(';');
@@ -1235,7 +1251,7 @@
             r += ',type_id='+type_id ;
             
             //~ Timer value
-            if(type_id=="2") {                    
+            if(type_id=="1" || type_id=="2") {                    
                 var timer = ',timer=';
                 timer += $('#ProgramSetupForm').find('input[name="day"]').val()+';';
                 timer += $('#ProgramSetupForm').find('input[name="hour"]').val()+';';
@@ -1279,6 +1295,7 @@
 
 <div id="container">
     <div id="title"></div>
+    <div id="subtitle"></div>
     <div id="user"></div>
     
     <div id="login"></div>
