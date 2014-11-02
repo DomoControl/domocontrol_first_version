@@ -138,7 +138,11 @@
                     f += '<p class="but"><input type="button" name="status" value="Status" onclick="setCookies(\'page\',\'menuStatus\'); getPage(1)" ></p>';
                     //privilege
                     if(getCookies()['privilege1']==1 || getCookies()['privilege3']==1 || getCookies()['privilege4']==1){
+                        
                         f += '<p class="but"><input type="button" name="setup" value="Setup" onclick="setCookies(\'page\',\'menuSetup\');getPage(1)" ></p>'; 
+                        
+                        f += '<br><br><p class="but"><input type="button" name="setup" value="Reboot" onclick="webiopi().callMacro(\'getReboot\', \'\' );" ></p>'; 
+                        f += '<p class="but"><input type="button" name="setup" value="Halt" onclick="webiopi().callMacro(\'getHalt\', \'\' );" ></p>'; 
                     }
                     $("#form").html(f);                  
                     $("#form1").html('');
